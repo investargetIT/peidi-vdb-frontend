@@ -2,6 +2,7 @@
 import Layout from "@/views/manage/components/layout/index.vue";
 import TitleCard from "@/views/manage/components/titleCard/index.vue";
 import TableCard from "@/views/manage/components/tableCard/index.vue";
+import DocumentDetail from "@/views/manage/components/documentDetail/index.vue";
 </script>
 
 <template>
@@ -15,7 +16,8 @@ import TableCard from "@/views/manage/components/tableCard/index.vue";
         <TableCard />
       </template>
       <template #right>
-        <div>右侧内容区</div>
+        <!-- 文件详情 -->
+        <DocumentDetail />
       </template>
     </Layout>
   </div>
