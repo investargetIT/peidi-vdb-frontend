@@ -8,8 +8,8 @@ export default [
     redirect: "/authority/index",
     component: Layout,
     meta: {
-      icon: "ri/settings-3-line",
-      title: $t("pd.menus.authority"),
+      icon: "ri/user-settings-line",
+      title: $t("pd.menus.userManage"),
       showLink: true,
       rank: 100
     },
@@ -19,8 +19,8 @@ export default [
         name: "Authority",
         component: () => import("@/views/authority/index.vue"),
         meta: {
-          title: $t("pd.menus.authority"),
-          icon: "ri/settings-3-line"
+          title: $t("pd.menus.userManage"),
+          icon: "ri/user-settings-line"
         }
       }
     ]

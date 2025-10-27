@@ -9,7 +9,7 @@ export default {
   redirect: "/dashboard",
   meta: {
     icon: "ri/box-3-line",
-    title: $t("pd.menus.dashboard"),
+    title: $t("pd.menus.systemOverview"),
     rank: 0
   },
   children: [
@@ -18,7 +18,7 @@ export default {
       name: "Dashboard",
       component: () => import("@/views/dashboard/index.vue"),
       meta: {
-        title: $t("pd.menus.dashboard"),
+        title: $t("pd.menus.systemOverview"),
         showLink: VITE_HIDE_HOME === "true" ? false : true
       }
     }
