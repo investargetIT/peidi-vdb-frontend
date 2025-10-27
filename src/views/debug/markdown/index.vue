@@ -23,6 +23,7 @@ function initVditor() {
       hide: true
     },
     after: () => {
+      vditor.value.disabledCache(); // 禁用缓存，否则会导致预览时显示缓存内容
       vditor.value.setValue(MARKDOWN_EXAMPLE);
       const vditorsv: HTMLElement = document.querySelector(
         ".peidi-debug-markdown .vditor-sv"
@@ -41,10 +42,8 @@ onMounted(() => {
 <template>
   <div class="peidi-debug-markdown">
     <el-divider content-position="left">Vditor 示例 </el-divider>
-    <div id="pridi-debug-vditor"></div>
+    <div id="pridi-debug-vditor" />
     <el-divider content-position="left">MarkdownIt 示例 </el-divider>
-    <p v-html="md"></p>
+    <p v-html="md" />
   </div>
 </template>
-
-<style lang="scss" scoped></style>

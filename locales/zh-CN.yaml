@@ -95,3 +95,9 @@ pd:
     authority: 权限管理
     manage: 文件管理
     debug: 调试
+    userManage: 用户管理
+    systemOverview: 系统概览
+    vectorDatabaseManage: 向量数据库管理
+    productDocumentation: 产品文档
+    peidiDocumentation: 佩蒂文档
+    detectAndTagReport: 检测&标签报告

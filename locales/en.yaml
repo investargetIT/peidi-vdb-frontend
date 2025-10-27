@@ -95,3 +95,9 @@ pd:
     authority: Authority Manage,
     manage: File Manage
     debug: Debug
+    userManage: User Manage
+    systemOverview: System Overview
+    vectorDatabaseManage: Vector Database Manage
+    productDocumentation: Product Documentation
+    peidiDocumentation: Peidi Documentation
+    detectAndTagReport: Detect & Tag Report
