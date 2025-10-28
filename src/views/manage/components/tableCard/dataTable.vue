@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import EpEdit from "~icons/ep/edit";
 import EpDelete from "~icons/ep/delete";
-import { computed, ref } from "vue";
+import { computed, inject, ref } from "vue";
+import type { DataDialogMethods } from "@/views/manage/productDocumentation.vue";
 
 const judgeStatusType = status => {
   switch (status) {
@@ -18,29 +19,13 @@ const judgeStatusType = status => {
 
 let tableData = [
   {
-    // 标题 类型 产品 状态 创建时间 操作
-    title: "产品A安全数据表(MSDS)",
-    titleId: "MSDS-2023-001",
-    type: "MSDS",
-    product: "产品A",
-    status: "有效",
-    createTime: "2023年10月16日 17:30"
-  },
-  {
-    title: "产品B技术规格书",
-    titleId: "TDS-2023-042",
-    type: "TDS",
-    product: "产品B",
-    status: "草稿",
-    createTime: "2023年09月21日 22:20"
-  },
-  {
-    title: "产品C检验报告",
-    titleId: "COA-2023-088",
-    type: "COA",
-    product: "产品C",
-    status: "已过期",
-    createTime: "2023年09月21日 22:20"
+    // -文档标题 -报告编号 -文档类型 -产品名称 -文档状态 -入库时间
+    documentTitle: "产品A安全数据表(MSDS)",
+    reportNumber: "MSDS-2023-001",
+    documentType: "MSDS",
+    productName: "产品A",
+    documentStatus: "有效",
+    storageTime: "2023年10月16日 17:30"
   }
 ];
 
@@ -66,6 +51,14 @@ const handleCurrentChange = page => {
   console.log("当前页码:", page);
   currentPage.value = page;
 };
+
+// 数据详情弹窗方法
+const dataDialogMethods = inject<DataDialogMethods>("dataDialogMethods");
+const handleEditClick = row => {
+  console.log("编辑点击:", row);
+  dataDialogMethods?.initDataDialog(row);
+  dataDialogMethods?.showDataDialog("edit");
+};
 </script>
 
 <template>
@@ -77,37 +70,40 @@ const handleCurrentChange = page => {
       :header-cell-style="{ color: '#09090b' }"
       max-height="740px"
     >
-      <el-table-column prop="title" label="标题">
+      <el-table-column prop="documentTitle" label="标题">
         <template #default="scope">
           <p class="text-[14px] text-[#09090b] font-bold">
-            {{ scope.row.title }}
+            {{ scope.row.documentTitle }}
           </p>
-          <p class="text-[12px] text-[#71717a]">{{ scope.row.titleId }}</p>
+          <p class="text-[12px] text-[#71717a]">{{ scope.row.reportNumber }}</p>
         </template>
       </el-table-column>
-      <el-table-column prop="type" label="类型" width="130">
+      <el-table-column prop="documentType" label="类型" width="130">
         <template #default="scope">
           <el-tag effect="plain" type="info">
-            <span class="text-[#09090b]">{{ scope.row.type }}</span>
+            <span class="text-[#09090b]">{{ scope.row.documentType }}</span>
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="product" label="产品" width="180" />
-      <el-table-column prop="status" label="状态" width="100">
+      <el-table-column prop="productName" label="产品" width="180" />
+      <el-table-column prop="documentStatus" label="状态" width="100">
         <template #default="scope">
-          <el-tag effect="dark" :type="judgeStatusType(scope.row.status)">
-            {{ scope.row.status }}
+          <el-tag
+            effect="dark"
+            :type="judgeStatusType(scope.row.documentStatus)"
+          >
+            {{ scope.row.documentStatus }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="创建时间" width="180" />
-      <el-table-column prop="operation" label="操作" width="130">
+      <el-table-column prop="storageTime" label="入库时间" width="180" />
+      <el-table-column label="操作" width="130">
         <template #default="scope">
           <el-button
             text
             size="large"
             style="width: 36px; height: 36px"
-            @click="console.log(scope.row)"
+            @click="handleEditClick(scope.row)"
           >
             <EpEdit color="#09090b" />
           </el-button>

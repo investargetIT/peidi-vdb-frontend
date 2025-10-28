@@ -7,11 +7,15 @@ import { useTranslationLang } from "@/layout/hooks/useTranslationLang";
 import LaySidebarFullScreen from "../lay-sidebar/components/SidebarFullScreen.vue";
 import LaySidebarBreadCrumb from "../lay-sidebar/components/SidebarBreadCrumb.vue";
 import LaySidebarTopCollapse from "../lay-sidebar/components/SidebarTopCollapse.vue";
+import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
 
 import GlobalizationIcon from "@/assets/svg/globalization.svg?component";
 import LogoutCircleRLine from "~icons/ri/logout-circle-r-line";
 import Setting from "~icons/ri/settings-3-line";
 import Check from "~icons/ep/check";
+import RiFormatClear from "~icons/ri/format-clear";
+
+const { onReset } = useDataThemeChange();
 
 const {
   layout,
@@ -48,7 +52,7 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
 
     <div v-if="layout === 'vertical'" class="vertical-header-right">
       <!-- 菜单搜索 -->
-      <LaySearch id="header-search" v-show="false" />
+      <LaySearch v-show="false" id="header-search" />
       <!-- 国际化 -->
       <el-dropdown id="header-translation" trigger="click">
         <GlobalizationIcon
@@ -82,9 +86,18 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
         </template>
       </el-dropdown>
       <!-- 全屏 -->
-      <LaySidebarFullScreen id="full-screen" v-show="false" />
+      <LaySidebarFullScreen v-show="false" id="full-screen" />
       <!-- 消息通知 -->
-      <LayNotice id="header-notice" v-show="false" />
+      <LayNotice v-show="false" id="header-notice" />
+      <!-- 清空缓存 -->
+      <el-button text>
+        <IconifyIconOffline
+          :icon="RiFormatClear"
+          class="text-[#09090b]"
+          @click="onReset"
+        />
+      </el-button>
+
       <!-- 退出登录 -->
       <el-dropdown trigger="click">
         <span class="el-dropdown-link navbar-bg-hover select-none">
@@ -104,10 +117,10 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
         </template>
       </el-dropdown>
       <span
+        v-show="false"
         class="set-icon navbar-bg-hover"
         :title="t('buttons.pureOpenSystemSet')"
         @click="onPanel"
-        v-show="false"
       >
         <IconifyIconOffline :icon="Setting" />
       </span>
