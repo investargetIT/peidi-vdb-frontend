@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { inject, ref } from "vue";
 import DataBlock from "./dataBlock.vue";
 import Search from "~icons/ep/search";
 import RiAddLargeLine from "~icons/ri/add-large-line";
 import DataTable from "./dataTable.vue";
+import type { DataDialogMethods } from "@/views/manage/productDocumentation.vue";
 
 const dataBlocks = [
   {
@@ -29,6 +30,14 @@ const dataBlocks = [
 ];
 
 const dataSearch = ref("");
+
+// 数据详情弹窗方法
+const dataDialogMethods = inject<DataDialogMethods>("dataDialogMethods");
+
+// 处理添加数据点击事件
+const handleAddDataClick = () => {
+  dataDialogMethods?.showDataDialog("add");
+};
 </script>
 
 <template>
@@ -60,7 +69,10 @@ const dataSearch = ref("");
                 :prefix-icon="Search"
               />
             </div>
-            <el-button type="primary" :icon="RiAddLargeLine"
+            <el-button
+              type="primary"
+              :icon="RiAddLargeLine"
+              @click="handleAddDataClick"
               >添加数据</el-button
             >
           </div>
