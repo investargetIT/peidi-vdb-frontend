@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import * as echarts from "echarts";
 import { onMounted } from "vue";
+import * as Highcharts from "highcharts";
+import "highcharts/highcharts-3d";
 
 // props
 const props = defineProps({
@@ -33,8 +34,7 @@ onMounted(() => {
   const chartDom = document.getElementById(chartId);
   if (!chartDom) return;
 
-  const myChart = echarts.init(chartDom);
-  props.option && myChart.setOption(props.option);
+  Highcharts.chart(chartDom, props.option);
 });
 </script>
 

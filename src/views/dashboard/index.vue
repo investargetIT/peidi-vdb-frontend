@@ -6,6 +6,7 @@ import RiUser3Line from "~icons/ri/user-3-line";
 import RiLineChartLine from "~icons/ri/line-chart-line";
 import ChartCard from "@/views/dashboard/components/chartCard/index.vue";
 import dayjs from "dayjs";
+import HChartCard from "@/views/dashboard/components/hchartCard/index.vue";
 
 const dataCards = [
   {
@@ -34,7 +35,7 @@ const dataCards = [
   }
 ];
 
-const chartCards = [
+const echartCards = [
   {
     name: "recentActivity",
     title: "最近活动",
@@ -64,42 +65,68 @@ const chartCards = [
         {
           data: [820, 932, 901, 934, 1290, 1330, 1320],
           type: "line",
-          smooth: true
+          smooth: true,
+          color: "#2563EB"
         }
       ]
     },
     style: {
       width: "900px"
     }
-  },
+  }
+];
+
+const hchartCard = [
   {
     name: "collectionUsage",
     title: "集合使用情况",
     text: "各集合的数据量分布",
     option: {
-      legend: {
-        orient: "vertical",
-        left: "left"
+      credits: {
+        enabled: false
+      },
+      chart: {
+        type: "pie",
+        options3d: {
+          enabled: true,
+          alpha: 45,
+          beta: 0
+        }
+      },
+      title: {
+        text: ""
+      },
+      accessibility: {
+        point: {
+          valueSuffix: "%"
+        }
+      },
+      tooltip: {
+        pointFormat: "{series.name}: <b>{point.percentage:.1f}%</b>"
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: "pointer",
+          depth: 35,
+          dataLabels: {
+            enabled: true,
+            format: "{point.name}"
+          }
+        }
       },
       series: [
         {
-          name: "Access From",
           type: "pie",
-          radius: "50%",
+          name: "占用",
           data: [
-            { value: 1048, name: "Search Engine" },
-            { value: 735, name: "Direct" },
-            { value: 580, name: "Email" },
-            { value: 484, name: "Union Ads" },
-            { value: 300, name: "Video Ads" }
-          ],
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: "rgba(0, 0, 0, 0.5)"
-            }
-          }
+            ["集合1", 23],
+            ["集合2", 18],
+            ["集合3", 12],
+            ["集合4", 9],
+            ["集合5", 8],
+            ["集合6", 30]
+          ]
         }
       ]
     },
@@ -129,9 +156,18 @@ const chartCards = [
     <!-- 第二层图表卡片 -->
     <div class="mt-[20px] flex items-center justify-between">
       <ChartCard
-        v-for="card in chartCards"
+        v-for="card in echartCards"
         :key="card.name"
         :name="card.name"
+        :title="card.title"
+        :text="card.text"
+        :option="card.option"
+        :style="card?.style"
+      />
+      <HChartCard
+        v-for="card in hchartCard"
+        :key="card.title"
+        :name="card.title"
         :title="card.title"
         :text="card.text"
         :option="card.option"
