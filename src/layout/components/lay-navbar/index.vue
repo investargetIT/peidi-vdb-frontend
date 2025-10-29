@@ -90,12 +90,8 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
       <!-- 消息通知 -->
       <LayNotice v-show="false" id="header-notice" />
       <!-- 清空缓存 -->
-      <el-button text>
-        <IconifyIconOffline
-          :icon="RiFormatClear"
-          class="text-[#09090b]"
-          @click="onReset"
-        />
+      <el-button text @click="onReset">
+        <IconifyIconOffline :icon="RiFormatClear" class="text-[#09090b]" />
       </el-button>
 
       <!-- 退出登录 -->

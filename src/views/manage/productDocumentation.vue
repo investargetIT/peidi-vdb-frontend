@@ -6,6 +6,7 @@ import DocumentDetail from "@/views/manage/components/documentDetail/index.vue";
 import DataDialog from "@/views/manage/components/dataDialog/index.vue";
 import { provide, ref } from "vue";
 import type { DialogType } from "@/views/manage/components/dataDialog/index.vue";
+import LinkDetail from "@/views/manage/components/linkDetail/index.vue";
 
 //#region 数据详情弹窗逻辑
 // 数据详情弹窗方法接口
@@ -52,7 +53,17 @@ provide<DataDialogMethods>("dataDialogMethods", dataDialogMethods());
       </template>
       <template #right>
         <!-- 文件详情 -->
-        <DocumentDetail />
+        <!-- <DocumentDetail /> -->
+        <!-- 链接详情 -->
+        <!-- <LinkDetail /> -->
+        <el-tabs tab-position="top">
+          <el-tab-pane label="文件">
+            <DocumentDetail />
+          </el-tab-pane>
+          <el-tab-pane label="链接">
+            <LinkDetail />
+          </el-tab-pane>
+        </el-tabs>
       </template>
     </Layout>
 
