@@ -107,12 +107,7 @@ const handleEditClick = row => {
           >
             <EpEdit color="#09090b" />
           </el-button>
-          <el-button
-            text
-            size="large"
-            style="width: 36px; height: 36px"
-            @click="console.log(scope.row)"
-          >
+          <el-button text size="large" style="width: 36px; height: 36px">
             <EpDelete color="#09090b" />
           </el-button>
         </template>

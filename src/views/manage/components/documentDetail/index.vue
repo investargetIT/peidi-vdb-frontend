@@ -6,6 +6,6 @@ import Markdown from "@/views/manage/components/markdown/index.vue";
   <div>
     <div class="text-[18px] font-bold text-[#09090b]">文件详情</div>
     <el-divider />
-    <Markdown />
+    <Markdown :height="690" />
   </div>
 </template>

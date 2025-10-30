@@ -17,6 +17,9 @@ importers:
       '@pureadmin/utils':
         specifier: ^2.6.2
         version: 2.6.2(echarts@5.6.0)(vue@3.5.18(typescript@5.9.2))
+      '@types/highcharts':
+        specifier: ^7.0.0
+        version: 7.0.0
       '@vueuse/core':
         specifier: ^13.6.0
         version: 13.6.0(vue@3.5.18(typescript@5.9.2))
@@ -38,6 +41,9 @@ importers:
       element-plus:
         specifier: ^2.10.4
         version: 2.10.5(vue@3.5.18(typescript@5.9.2))
+      highcharts:
+        specifier: ^12.4.0
+        version: 12.4.0
       js-cookie:
         specifier: ^3.0.5
         version: 3.0.5
@@ -77,6 +83,9 @@ importers:
       vue:
         specifier: ^3.5.18
         version: 3.5.18(typescript@5.9.2)
+      vue-highcharts:
+        specifier: ^0.2.0
+        version: 0.2.0(highcharts@12.4.0)(vue@3.5.18(typescript@5.9.2))
       vue-i18n:
         specifier: ^11.1.11
         version: 11.1.11(vue@3.5.18(typescript@5.9.2))
@@ -1308,6 +1317,10 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/highcharts@7.0.0':
+    resolution: {integrity: sha512-YDevls0s9uqz6VEbchxp+NEaKssAPq5aDZgqEUpxOIUCQEncQtXxibp1w4lvgKyhM4qDejAcSZ+DKfA/kzqR0A==}
+    deprecated: This is a stub types definition. highcharts provides its own type definitions, so you do not need this installed.
+
   '@types/js-cookie@3.0.6':
     resolution: {integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==}
 
@@ -2328,6 +2341,9 @@ packages:
 
   hey-listen@1.0.8:
     resolution: {integrity: sha512-COpmrF2NOg4TBWUJ5UVyaCU2A88wEMkUPK4hNqyCkqHbxT92BbvfjoSozkAIIm6XhicGlJHhFdullInrdhwU8Q==}
+
+  highcharts@12.4.0:
+    resolution: {integrity: sha512-o6UxxfChSUrvrZUbWrAuqL1HO/+exhAUPcZY6nnqLsadZQlnP16d082sg7DnXKZCk1gtfkyfkp6g3qkIZ9miZg==}
 
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
@@ -3780,6 +3796,12 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
 
+  vue-highcharts@0.2.0:
+    resolution: {integrity: sha512-+zXI/ei3KgpVuEreyeTsvLIp092m+03JtTwg6gj7DxtjJqi4LhYvV/rBnUoaXuvqTsiPNwPBPKeyiATL9iM2Gw==}
+    peerDependencies:
+      highcharts: '>=4.2.0'
+      vue: '>=3'
+
   vue-i18n@11.1.11:
     resolution: {integrity: sha512-LvyteQoXeQiuILbzqv13LbyBna/TEv2Ha+4ZWK2AwGHUzZ8+IBaZS0TJkCgn5izSPLcgZwXy9yyTrewCb2u/MA==}
     engines: {node: '>= 16'}
@@ -4839,6 +4861,10 @@ snapshots:
       '@types/node': 20.19.9
 
   '@types/estree@1.0.8': {}
+
+  '@types/highcharts@7.0.0':
+    dependencies:
+      highcharts: 12.4.0
 
   '@types/js-cookie@3.0.6': {}
 
@@ -6074,6 +6100,8 @@ snapshots:
   he@1.2.0: {}
 
   hey-listen@1.0.8: {}
+
+  highcharts@12.4.0: {}
 
   hookable@5.5.3: {}
 
@@ -7466,6 +7494,11 @@ snapshots:
       semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
+
+  vue-highcharts@0.2.0(highcharts@12.4.0)(vue@3.5.18(typescript@5.9.2)):
+    dependencies:
+      highcharts: 12.4.0
+      vue: 3.5.18(typescript@5.9.2)
 
   vue-i18n@11.1.11(vue@3.5.18(typescript@5.9.2)):
     dependencies:

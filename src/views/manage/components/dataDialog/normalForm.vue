@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import RowCol from "@/views/manage/components/dataDialog/rowCol.vue";
-import { FormInstance, FormRules } from "element-plus";
+import { FormInstance, FormRules, UploadFile } from "element-plus";
+import SolarUploadMinimalisticOutline from "~icons/solar/upload-minimalistic-outline";
+import TablerFile from "~icons/tabler/file";
+import { fa } from "element-plus/es/locales.mjs";
 
 const props = defineProps({
   // 保存回调函数
@@ -21,6 +24,12 @@ const props = defineProps({
     // 不强制数据类型，组件自己遍历对象得到表单字段
     type: Object,
     default: () => {}
+  },
+  // 表单类型 添加和编辑上传文件样式不同
+  formType: {
+    type: String as PropType<"add" | "edit">,
+    default: "add",
+    required: true
   }
 });
 
@@ -149,6 +158,8 @@ const clearForm = () => {
   // console.log("清空表单数据");
   // 遍历表单数据，将所有字段设为空字符串
   formRef.value?.resetFields();
+  // 清空上传文件列表
+  uploadFileList.value = [];
 };
 
 // 处理保存操作
@@ -170,6 +181,50 @@ const handleCancel = () => {
   clearForm();
   // 执行取消回调函数
   props.cancelCallback();
+};
+
+// 上传文档 文件列表
+const uploadFileList = ref<UploadFile[]>([]);
+// 计算属性 判断是否显示上传按钮 true不显示 false显示
+const hasUploadFile = computed(() => {
+  // 编辑模式下不显示上传按钮
+  if (props.formType === "edit") return true;
+  // 如果是添加模式，且有上传文件，不显示上传按钮
+  if (uploadFileList.value.length > 0) return true;
+  // 其他情况显示上传按钮
+  return false;
+});
+// 处理删除上传文件 并触发hasUploadFile变化
+const handleDeleteUploadFile = () => {
+  uploadFileList.value = [];
+};
+// 监听uploadFileList变化
+watch(
+  () => uploadFileList.value,
+  (newVal, oldVal) => {
+    // 只有在uploadFileList真正发生变化时才更新
+    if (newVal !== oldVal) {
+      // 如果有值就截取格式给documentType，截取最后一个.后的字符串
+      if (newVal.length > 0) {
+        console.log("watch uploadFileList", newVal);
+        form.documentType =
+          newVal[0]?.name?.split(".")?.[
+            newVal[0]?.name?.split(".").length - 1
+          ] || "";
+        // TODO: 这里只是简单的截取文件名，后续需要根据实际情况处理
+        form.documentPath = newVal[0]?.name || "";
+      } else {
+        form.documentType = "";
+      }
+    }
+  },
+  { deep: true, immediate: true }
+);
+// 上传文档 成功回调
+const handleUploadSuccess = (res: any) => {
+  // 对接后端返回的文件路径 暂时不处理，在watch中直接赋值
+  // 上传成功后，将返回的文件路径赋值给form.documentPath
+  form.documentPath = res.data?.filePath || "";
 };
 
 // 监听formData变化，如果newVal不为空，则在newVal中遍历出form对象里存在的字段，赋值给form
@@ -214,7 +269,7 @@ defineExpose({
       <el-radio-button label="基本信息" value="t-basic" />
       <el-radio-button label="产品信息" value="t-product" />
       <el-radio-button label="系统信息" value="t-system" />
-      <el-radio-button label="扩展信息" value="t-extend" />
+      <!-- <el-radio-button label="扩展信息" value="t-extend" /> -->
     </el-radio-group>
   </div>
 
@@ -246,16 +301,69 @@ defineExpose({
             <el-form-item label="文档类型" prop="documentType">
               <el-input
                 v-model="form.documentType"
-                placeholder="如：MSDS, TDS, COA"
+                placeholder="上传文档后自动识别"
+                disabled
               />
+              <div class="text-[12px] text-[#71717a]">
+                系统将根据文件名自动识别文档类型
+              </div>
             </el-form-item>
           </template>
           <template #right>
-            <el-form-item label="文档路径" prop="documentPath">
-              <el-input
-                v-model="form.documentPath"
-                placeholder="/path/to/document.pdf"
-              />
+            <!--           
+              上传文档逻辑：
+                由upload+alert组合实现
+                1. 编辑时，不显示upload按钮， 并且alert中不显示x
+                2. 添加时，如果没有上传文件，显示upload按钮；如果有上传文件，显示alert并且显示x
+            -->
+            <el-form-item label="上传文档" prop="documentPath">
+              <!-- 显隐逻辑抽离到计算属性 -->
+              <div v-if="!hasUploadFile" class="w-full h-[32px]">
+                <el-upload
+                  v-model:file-list="uploadFileList"
+                  action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                  :limit="1"
+                  :auto-upload="false"
+                  accept=".pdf,.docx,.xlsx,.txt"
+                  @on-success="handleUploadSuccess"
+                >
+                  <el-button>
+                    <IconifyIconOffline
+                      :icon="SolarUploadMinimalisticOutline"
+                      class="w-[18px] h-[18px] text-[#09090B]"
+                    />
+                    <span class="ml-[5px] text-[#09090B]">选择文件</span>
+                  </el-button>
+                </el-upload>
+              </div>
+
+              <div
+                v-if="hasUploadFile"
+                class="peidi-manage-data-dialog-upload-alert w-full"
+              >
+                <el-alert
+                  :title="
+                    props.formType === 'add'
+                      ? uploadFileList[0]?.name
+                      : form.documentPath
+                  "
+                  type="info"
+                  :closable="props.formType === 'add'"
+                  style="
+                    padding-top: 3px;
+                    padding-bottom: 3px;
+                    border: 1px solid #e5e7eb;
+                  "
+                  show-icon
+                  @close="handleDeleteUploadFile"
+                >
+                  <template #icon> <TablerFile /> </template>
+                </el-alert>
+              </div>
+
+              <div class="text-[12px] text-[#71717a]">
+                支持 PDF, Word, Excel, TXT 格式
+              </div>
             </el-form-item>
           </template>
         </RowCol>
@@ -308,7 +416,7 @@ defineExpose({
 
       <!-- 类别 -产品信息 -->
       <div v-show="selectedForm === 't-product'">
-        <el-form-item label="产品名称" prop="productName">
+        <el-form-item label="产品名称/系列名" prop="productName">
           <el-input v-model="form.productName" placeholder="输入产品名称" />
         </el-form-item>
 
@@ -372,12 +480,12 @@ defineExpose({
           ></template>
         </RowCol>
 
-        <el-form-item label="文件哈希(完整性校验)" prop="fileHash">
+        <!-- <el-form-item label="文件哈希(完整性校验)" prop="fileHash">
           <el-input
             v-model="form.fileHash"
             placeholder="文件的MD5或SHA256哈希值"
           />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="访问控制" prop="accessControl">
           <el-input
             v-model="form.accessControl"
@@ -387,7 +495,7 @@ defineExpose({
       </div>
 
       <!-- 类别 -扩展信息 -->
-      <div v-show="selectedForm === 't-extend'">
+      <!-- <div v-show="selectedForm === 't-extend'">
         <el-form-item label="自定义标签" prop="customTags">
           <el-input
             v-model="form.customTags"
@@ -419,7 +527,7 @@ defineExpose({
           />
           <div class="text-[12px] text-[#71717a]">输入有效的JSON格式数据</div>
         </el-form-item>
-      </div>
+      </div> -->
 
       <!-- 提交按钮 -->
       <el-form-item>
@@ -436,8 +544,8 @@ defineExpose({
 
 <style lang="scss" scoped>
 :deep(.el-radio-button__inner) {
-  padding-right: 25px;
-  padding-left: 25px;
+  padding-right: 51px;
+  padding-left: 51px;
   font-size: 14px;
   font-weight: bold;
   color: #09090b;
@@ -445,5 +553,15 @@ defineExpose({
 
 :deep(.el-form-item__label) {
   color: #09090b;
+}
+
+.peidi-manage-data-dialog-upload-alert {
+  .el-alert--info {
+    height: 32px;
+  }
+
+  :deep(.el-alert__close-btn) {
+    top: 8px;
+  }
 }
 </style>
