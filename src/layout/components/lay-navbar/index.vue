@@ -14,6 +14,7 @@ import LogoutCircleRLine from "~icons/ri/logout-circle-r-line";
 import Setting from "~icons/ri/settings-3-line";
 import Check from "~icons/ep/check";
 import RiFormatClear from "~icons/ri/format-clear";
+import { isDevEnv } from "@/utils/debug";
 
 const { onReset } = useDataThemeChange();
 
@@ -90,7 +91,7 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
       <!-- 消息通知 -->
       <LayNotice v-show="false" id="header-notice" />
       <!-- 清空缓存 -->
-      <el-button text @click="onReset">
+      <el-button v-show="isDevEnv()" text @click="onReset">
         <IconifyIconOffline :icon="RiFormatClear" class="text-[#09090b]" />
       </el-button>
 

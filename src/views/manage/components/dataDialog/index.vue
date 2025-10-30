@@ -66,6 +66,7 @@ const handleBeforeClose = () => {
       :cancel-callback="closeDataDialog"
       :save-callback="closeDataDialog"
       :form-data="formData"
+      :form-type="dialogType"
     />
   </el-dialog>
 </template>

@@ -71,7 +71,7 @@ const echartCards = [
       ]
     },
     style: {
-      width: "900px"
+      width: "100%"
     }
   }
 ];
@@ -131,7 +131,7 @@ const hchartCard = [
       ]
     },
     style: {
-      width: "700px"
+      width: "100%"
     }
   }
 ];
@@ -142,37 +142,45 @@ const hchartCard = [
     <!-- 标题 -->
     <div class="text-[20px] font-bold">系统概览</div>
     <!-- 第一层数据卡片 -->
-    <div class="mt-[20px] flex items-center justify-between">
-      <DataCard
-        v-for="card in dataCards"
-        :key="card.title"
-        :title="card.title"
-        :icon="card.icon"
-        :value="card.value"
-        :text="card.text"
-        style="width: 400px"
-      />
+    <div class="mt-[20px]">
+      <el-row :gutter="60">
+        <el-col v-for="card in dataCards" :key="card.title" :span="6">
+          <DataCard
+            :title="card.title"
+            :icon="card.icon"
+            :value="card.value"
+            :text="card.text"
+            style="min-width: 300px"
+          />
+        </el-col>
+      </el-row>
     </div>
     <!-- 第二层图表卡片 -->
-    <div class="mt-[20px] flex items-center justify-between">
-      <ChartCard
-        v-for="card in echartCards"
-        :key="card.name"
-        :name="card.name"
-        :title="card.title"
-        :text="card.text"
-        :option="card.option"
-        :style="card?.style"
-      />
-      <HChartCard
-        v-for="card in hchartCard"
-        :key="card.title"
-        :name="card.title"
-        :title="card.title"
-        :text="card.text"
-        :option="card.option"
-        :style="card?.style"
-      />
+    <div class="mt-[20px]">
+      <el-row :gutter="60">
+        <el-col :span="12">
+          <ChartCard
+            v-for="card in echartCards"
+            :key="card.name"
+            :name="card.name"
+            :title="card.title"
+            :text="card.text"
+            :option="card.option"
+            :style="card?.style"
+          />
+        </el-col>
+        <el-col :span="12">
+          <HChartCard
+            v-for="card in hchartCard"
+            :key="card.title"
+            :name="card.title"
+            :title="card.title"
+            :text="card.text"
+            :option="card.option"
+            :style="card?.style"
+          />
+        </el-col>
+      </el-row>
     </div>
   </div>
 </template>
