@@ -34,9 +34,21 @@ export type RefreshTokenResult = {
   };
 };
 
+const commonUrlApi = (url: string) => `${"https://user.peidigroup.cn"}${url}`;
+
 /** 登录 */
 export const getLogin = (data?: object) => {
-  return http.request<UserResult>("post", "/login", { data });
+  // return http.request<UserResult>("post", "/login", { data });
+  return http.request<UserResult>(
+    "post",
+    commonUrlApi("/user/login/password"),
+    {
+      data,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    }
+  );
 };
 
 /** 刷新`token` */

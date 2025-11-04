@@ -1,35 +1,60 @@
 <script setup lang="ts">
-import { inject, ref } from "vue";
+import { computed, inject, ref } from "vue";
 import DataBlock from "./dataBlock.vue";
 import Search from "~icons/ep/search";
 import RiAddLargeLine from "~icons/ri/add-large-line";
 import DataTable from "./dataTable.vue";
 import type { DataDialogMethods } from "@/views/manage/productDocumentation.vue";
 
+// props
+const props = defineProps({
+  tableData: {
+    type: Array<Record<string, any>>,
+    required: true
+  },
+  tableLoading: {
+    type: Boolean,
+    default: false
+  }
+});
+
 const dataBlocks = [
   {
     title: "总数据量",
-    value: Number(156).toLocaleString(),
+    value: Number(0).toLocaleString(),
     color: "#155dfc"
   },
   {
     title: "向量维度",
-    value: Number(384).toLocaleString(),
+    value: Number(0).toLocaleString(),
     color: "#00a63e"
   },
   {
     title: "有效数据",
-    value: Number(133).toLocaleString(),
+    value: Number(0).toLocaleString(),
     color: "#9810fa"
   },
   {
     title: "最后更新",
-    value: "2023年11月20日",
+    // value: "2023年11月20日",
+    value: "--",
     color: "#f54900"
   }
 ];
 
+//#region 搜索数据逻辑
 const dataSearch = ref("");
+// 搜索后的表格数据
+const filteredTableData = computed(() => {
+  if (!dataSearch.value) {
+    return props.tableData;
+  }
+  return props.tableData.filter(item =>
+    item.title.toLowerCase().includes(dataSearch.value.toLowerCase())
+  );
+});
+
+//#endregion
 
 // 数据详情弹窗方法
 const dataDialogMethods = inject<DataDialogMethods>("dataDialogMethods");
@@ -78,7 +103,10 @@ const handleAddDataClick = () => {
           </div>
         </div>
         <!-- 数据列表-表格 -->
-        <DataTable />
+        <DataTable
+          v-loading="props.tableLoading"
+          :tableDataSource="filteredTableData"
+        />
       </div>
     </div>
   </el-card>

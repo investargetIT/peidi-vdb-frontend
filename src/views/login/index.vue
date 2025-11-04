@@ -12,8 +12,8 @@ const { t } = useI18n();
 onMounted(() => {
   useUserStoreHook()
     .loginByUsername({
-      username: "admin",
-      password: "admin123"
+      username: "15503667563",
+      password: "Aa123456"
     })
     .then(res => {
       if (res.success) {
@@ -32,19 +32,12 @@ onMounted(() => {
 
 <template>
   <div class="peidi-login-container">
-    <div class="pridi-loader"></div>
+    <div class="pridi-loader" />
   </div>
 </template>
 
 <style lang="scss" scoped>
 .peidi-login-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-
   @keyframes loading-shake {
     0% {
       transform: rotate(-5deg);
@@ -78,6 +71,13 @@ onMounted(() => {
       transform: rotate(0deg);
     }
   }
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 
   .pridi-loader {
     width: 200px;

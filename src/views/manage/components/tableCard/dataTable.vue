@@ -1,37 +1,66 @@
 <script setup lang="ts">
 import EpEdit from "~icons/ep/edit";
 import EpDelete from "~icons/ep/delete";
-import { computed, inject, ref } from "vue";
+import { computed, inject, reactive, ref, watch } from "vue";
 import type { DataDialogMethods } from "@/views/manage/productDocumentation.vue";
+import { ElMessageBox } from "element-plus";
+import { postMilvusDelete } from "@/api/vdb";
+import { message } from "@/utils/message";
 
+// props
+const props = defineProps({
+  tableDataSource: {
+    type: Array,
+    required: true
+  }
+});
+
+//#region 数据状态类型判断
+// [
+//   { id: 109, value: "valid", type: "docStatus" },
+//   { id: 110, value: "obsolete", type: "docStatus" },
+//   { id: 111, value: "draft", type: "docStatus" }
+// ];
+const docStatusEnum = inject<any[]>("docStatusEnum");
 const judgeStatusType = status => {
   switch (status) {
-    case "有效":
+    case "109":
       return "primary";
-    case "草稿":
+    case "111":
       return "info";
-    case "已过期":
+    case "110":
       return "danger";
     default:
       return "primary";
   }
 };
+// 用计算属性来判断数据状态的标签
+const judgeStatusLabel = computed(() => {
+  return id => {
+    // console.log("docStatusEnum:", docStatusEnum);
+    const docStatusEnumArray = Array.from(docStatusEnum);
+    if (docStatusEnumArray.length === 0) return "valid";
+    const statusItem = docStatusEnumArray?.find(item => item.id === id);
+    return statusItem?.value || "valid";
+  };
+});
+//#endregion
 
-let tableData = [
-  {
-    // -文档标题 -报告编号 -文档类型 -产品名称 -文档状态 -入库时间
-    documentTitle: "产品A安全数据表(MSDS)",
-    reportNumber: "MSDS-2023-001",
-    documentType: "MSDS",
-    productName: "产品A",
-    documentStatus: "有效",
-    storageTime: "2023年10月16日 17:30"
-  }
-];
+let tableData = ref<any>([
+  // {
+  //   // -文档标题 -报告编号 -文档类型 -产品名称 -文档状态 -入库时间
+  //   title: "产品A安全数据表(MSDS)",
+  //   milvusId: "MSDS-2023-001",
+  //   reportType: "MSDS",
+  //   productName: "产品A",
+  //   docStatus: "有效",
+  //   reportDate: "2023年10月16日 17:30"
+  // }
+]);
 
 //#region tableData 复制n份
-const n = 100;
-tableData = tableData.flatMap(item => Array(n).fill(item));
+// const n = 100;
+// tableData = tableData.flatMap(item => Array(n).fill(item));
 //#endregion
 
 const currentPage = ref(1);
@@ -40,7 +69,7 @@ const pageSize = ref(10);
 const currentPageData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
   const end = start + pageSize.value;
-  return tableData.slice(start, end);
+  return tableData.value.slice(start, end);
 });
 
 const handleSizeChange = size => {
@@ -59,6 +88,60 @@ const handleEditClick = row => {
   dataDialogMethods?.initDataDialog(row);
   dataDialogMethods?.showDataDialog("edit");
 };
+
+watch(
+  () => props.tableDataSource,
+  (newVal, oldVal) => {
+    if (newVal.length > 0 && newVal !== oldVal) {
+      console.log("tableDataSource 变化:", newVal);
+      tableData.value = newVal;
+    }
+  }
+);
+
+//#region 触发右侧文件详情逻辑
+// 获取注入
+const updateDocumentDetailData = inject<any>("updateDocumentDetailData");
+// 点击数据列表
+const handleClickTableLine = row => {
+  console.log("点击数据列表:", row);
+  updateDocumentDetailData(row);
+};
+//#endregion
+
+//#region 数据删除逻辑
+// 删除点击
+const handleDeleteClick = row => {
+  console.log("删除点击:", row);
+  ElMessageBox.confirm(`确定删除文档 【${row.title}】 吗？`, "注意", {
+    confirmButtonText: "确定",
+    type: "warning",
+    showCancelButton: false,
+    confirmButtonClass: "el-button--danger" // 可以用element自带的，也可以完全自定义
+  })
+    .then(() => fetchDeleteMilvus(row))
+    .catch(() => {});
+};
+
+// 获取分页数据方法
+const fetchMilvusPage = inject<() => void>("fetchMilvusPage");
+// 删除知识库
+const fetchDeleteMilvus = async (data: any) => {
+  try {
+    const res: any = await postMilvusDelete(data);
+    console.log("删除知识库", res);
+    if (res.code === 200) {
+      message("删除知识库成功", { type: "success" });
+      // 刷新分页数据
+      fetchMilvusPage();
+    } else {
+      message(res.msg || "删除知识库失败", { type: "error" });
+    }
+  } catch (error) {
+    message("删除知识库失败", { type: "error" });
+  }
+};
+//#endregion
 </script>
 
 <template>
@@ -69,34 +152,33 @@ const handleEditClick = row => {
       style="width: 100%; color: #09090b"
       :header-cell-style="{ color: '#09090b' }"
       max-height="740px"
+      highlight-current-row
+      @current-change="handleClickTableLine"
     >
-      <el-table-column prop="documentTitle" label="标题">
+      <el-table-column prop="title" label="标题">
         <template #default="scope">
           <p class="text-[14px] text-[#09090b] font-bold">
-            {{ scope.row.documentTitle }}
+            {{ scope.row.title }}
           </p>
-          <p class="text-[12px] text-[#71717a]">{{ scope.row.reportNumber }}</p>
+          <p class="text-[12px] text-[#71717a]">{{ scope.row.milvusId }}</p>
         </template>
       </el-table-column>
-      <el-table-column prop="documentType" label="类型" width="130">
+      <el-table-column prop="reportType" label="类型" width="130">
         <template #default="scope">
           <el-tag effect="plain" type="info">
-            <span class="text-[#09090b]">{{ scope.row.documentType }}</span>
+            <span class="text-[#09090b]">{{ scope.row.reportType }}</span>
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="productName" label="产品" width="180" />
-      <el-table-column prop="documentStatus" label="状态" width="100">
+      <el-table-column prop="docStatus" label="状态" width="100">
         <template #default="scope">
-          <el-tag
-            effect="dark"
-            :type="judgeStatusType(scope.row.documentStatus)"
-          >
-            {{ scope.row.documentStatus }}
+          <el-tag effect="dark" :type="judgeStatusType(scope.row.docStatus)">
+            {{ judgeStatusLabel(scope.row.docStatus) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="storageTime" label="入库时间" width="180" />
+      <el-table-column prop="reportDate" label="入库时间" width="180" />
       <el-table-column label="操作" width="130">
         <template #default="scope">
           <el-button
@@ -107,7 +189,12 @@ const handleEditClick = row => {
           >
             <EpEdit color="#09090b" />
           </el-button>
-          <el-button text size="large" style="width: 36px; height: 36px">
+          <el-button
+            text
+            size="large"
+            style="width: 36px; height: 36px"
+            @click="handleDeleteClick(scope.row)"
+          >
             <EpDelete color="#09090b" />
           </el-button>
         </template>

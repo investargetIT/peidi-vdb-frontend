@@ -12,26 +12,26 @@ const dataCards = [
   {
     title: "向量集合总数",
     icon: RiDatabase2Line,
-    value: "3",
-    text: "+1 相比上月"
+    value: "0",
+    text: "+0 相比上月"
   },
   {
     title: "向量数据总量",
     icon: RiFileTextLine,
-    value: "675",
-    text: "+142 相比上月"
+    value: "0",
+    text: "+0 相比上月"
   },
   {
     title: "用户数量",
     icon: RiUser3Line,
-    value: "3",
+    value: "0",
     text: "+0 相比上月"
   },
   {
     title: "查询次数",
     icon: RiLineChartLine,
-    value: "1324",
-    text: "+346 相比上月"
+    value: "0",
+    text: "+0 相比上月"
   }
 ];
 
@@ -63,7 +63,7 @@ const echartCards = [
       },
       series: [
         {
-          data: [820, 932, 901, 934, 1290, 1330, 1320],
+          data: [0, 0, 0, 0, 0, 0, 0],
           type: "line",
           smooth: true,
           color: "#2563EB"
@@ -120,12 +120,12 @@ const hchartCard = [
           type: "pie",
           name: "占用",
           data: [
-            ["集合1", 23],
-            ["集合2", 18],
-            ["集合3", 12],
-            ["集合4", 9],
-            ["集合5", 8],
-            ["集合6", 30]
+            ["集合1", 10],
+            ["集合2", 10],
+            ["集合3", 10],
+            ["集合4", 10],
+            ["集合5", 10],
+            ["集合6", 10]
           ]
         }
       ]
