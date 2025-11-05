@@ -38,6 +38,13 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .peidi-login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+
   @keyframes loading-shake {
     0% {
       transform: rotate(-5deg);
@@ -71,13 +78,6 @@ onMounted(() => {
       transform: rotate(0deg);
     }
   }
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
 
   .pridi-loader {
     width: 200px;
