@@ -1,7 +1,8 @@
 import { http } from "@/utils/http";
 
 export const commonUrlApi = (url: string) =>
-  `${"http://12.18.1.12:8091"}${url}`;
+  // `${"http://12.18.1.12:8091"}${url}`;
+  `${"https://api.peidigroup.cn"}${url}`;
 
 /** 获取枚举 */
 // 枚举 -docStatus -reportType

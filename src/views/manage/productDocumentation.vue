@@ -146,12 +146,14 @@ const fetchMilvusPage = () => {
       } else {
         // 处理失败逻辑
         message("请求分页数据失败", { type: "error" });
+        console.log("请求分页数据失败", res);
       }
       tableLoading.value = false;
     })
-    .catch(() => {
+    .catch((error: any) => {
       // 处理失败逻辑
       message("请求分页数据失败", { type: "error" });
+      console.log("请求分页数据失败", error);
       tableLoading.value = false;
     });
 };

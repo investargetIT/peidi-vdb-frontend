@@ -51,6 +51,25 @@ export const getLogin = (data?: object) => {
   );
 };
 
+// 根据code拿到个人信息
+export const getUserInfo = code => {
+  return http.request("get", commonUrlApi(`/ding/userInfo?code=${code}`), {});
+};
+
+// 注册
+export const register = data => {
+  return http.request("post", commonUrlApi(`/user/email-register`), {
+    data
+  });
+};
+
+// 调用手机注册接口 -新版
+export const registerMobile = data => {
+  return http.request("post", commonUrlApi(`/user/sms-register`), {
+    data
+  });
+};
+
 /** 刷新`token` */
 export const refreshTokenApi = (data?: object) => {
   return http.request<RefreshTokenResult>("post", "/refresh-token", { data });

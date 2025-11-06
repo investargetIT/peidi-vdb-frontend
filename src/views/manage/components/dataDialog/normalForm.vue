@@ -15,6 +15,7 @@ import { commonUrlApi, postMilvusUpdate } from "@/api/vdb";
 import { message } from "@/utils/message";
 import * as dd from "dingtalk-jsapi";
 import { SYSTEM_CONFIG } from "@/constants";
+import { formatToken, getToken } from "@/utils/auth";
 
 const props = defineProps({
   // 保存回调函数
@@ -334,6 +335,13 @@ const clearForm = () => {
   uploadRequest.value = {};
 };
 
+// visibility 的逻辑计算处理
+const calculateVisibility = () => {
+  if (isAccessControlAllSelected) return "all";
+  if (form.accessControl === "") return "all";
+  return form.accessControl;
+};
+
 // 处理保存操作
 const handleSave = () => {
   // 校验表单数据
@@ -350,9 +358,7 @@ const handleSave = () => {
             documentPath: form.documentPath,
             documentDescription: form.documentDescription
           }),
-          visibility: isAccessControlAllSelected.value
-            ? "all"
-            : form.accessControl,
+          visibility: calculateVisibility(),
           title: form.documentTitle,
           reportType: form.reportType,
           expireDate: form.expiryDate,
@@ -378,9 +384,7 @@ const handleSave = () => {
             documentPath: form.documentPath,
             documentDescription: form.documentDescription
           }),
-          visibility: isAccessControlAllSelected.value
-            ? "all"
-            : form.accessControl,
+          visibility: calculateVisibility(),
           title: form.documentTitle,
           reportType: form.reportType,
           expireDate: form.expiryDate,
@@ -586,6 +590,9 @@ defineExpose({
                   :action="commonUrlApi('/ai/milvus/new')"
                   :data="{
                     request: JSON.stringify(uploadRequest)
+                  }"
+                  :headers="{
+                    Authorization: formatToken(getToken().accessToken)
                   }"
                   :limit="1"
                   :auto-upload="false"
