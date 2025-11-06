@@ -47,10 +47,15 @@ export function getToken(): DataInfo<number> {
  */
 export function setToken(data: DataInfo<Date>) {
   let expires = 0;
-  const { accessToken, refreshToken } = data;
+  // const { accessToken, refreshToken } = data;
+  const accessToken = data;
   const { isRemembered, loginDay } = useUserStoreHook();
-  expires = new Date(data.expires).getTime(); // 如果后端直接设置时间戳，将此处代码改为expires = data.expires，然后把上面的DataInfo<Date>改成DataInfo<number>即可
-  const cookieString = JSON.stringify({ accessToken, expires, refreshToken });
+  let currentDate = new Date();
+  // 一天后登陆失效
+  currentDate.setDate(currentDate.getDate() + 1);
+  expires = currentDate.getTime();
+  // expires = new Date(data.expires).getTime(); // 如果后端直接设置时间戳，将此处代码改为expires = data.expires，然后把上面的DataInfo<Date>改成DataInfo<number>即可
+  const cookieString = JSON.stringify({ accessToken, expires });
 
   expires > 0
     ? Cookies.set(TokenKey, cookieString, {
@@ -75,7 +80,7 @@ export function setToken(data: DataInfo<Date>) {
     useUserStoreHook().SET_ROLES(roles);
     useUserStoreHook().SET_PERMS(permissions);
     storageLocal().setItem(userKey, {
-      refreshToken,
+      // refreshToken,
       expires,
       avatar,
       username,
@@ -124,7 +129,8 @@ export function removeToken() {
 
 /** 格式化token（jwt格式） */
 export const formatToken = (token: string): string => {
-  return "Bearer " + token;
+  // return "Bearer " + token;
+  return token;
 };
 
 /** 是否有按钮级别的权限（根据登录接口返回的`permissions`字段进行判断）*/

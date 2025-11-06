@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, inject, reactive, ref, watch } from "vue";
 import RowCol from "@/views/manage/components/dataDialog/rowCol.vue";
-import { FormInstance, FormRules, UploadFile } from "element-plus";
+import {
+  FormInstance,
+  FormRules,
+  UploadFile,
+  UploadInstance
+} from "element-plus";
 import SolarUploadMinimalisticOutline from "~icons/solar/upload-minimalistic-outline";
 import TablerFile from "~icons/tabler/file";
-import { fa } from "element-plus/es/locales.mjs";
+import RiUser3Line from "~icons/ri/user-3-line";
+import RiInformation2Fill from "~icons/ri/information-2-fill";
+import { commonUrlApi, postMilvusUpdate } from "@/api/vdb";
+import { message } from "@/utils/message";
+import * as dd from "dingtalk-jsapi";
+import { SYSTEM_CONFIG } from "@/constants";
+import { formatToken, getToken } from "@/utils/auth";
 
 const props = defineProps({
   // 保存回调函数
@@ -32,6 +43,12 @@ const props = defineProps({
     required: true
   }
 });
+
+// 获取文档状态枚举
+const docStatusEnum = inject<any[]>("docStatusEnum");
+
+// 获取文档类型枚举
+const reportTypeEnum = inject<any[]>("reportTypeEnum");
 
 // 当前选择的表单类别
 const selectedForm = ref("t-basic");
@@ -74,28 +91,30 @@ const formRef = ref<FormInstance>();
 // 表单数据类型定义
 interface FormData {
   // 基本信息
-  documentTitle: string; // 文档标题
+  documentTitle: string; // 文档标题 ✅(已使用)
   documentDescription: string; // 文档描述
-  documentType: string; // 文档类型
+  documentType: string; // 文档类型 ✅
   documentPath: string; // 文档路径
-  reportDate: string; // 报告日期
-  expiryDate: string; // 到期日期
-  language: string; // 语言
-  documentStatus: string; // 文档状态
+  reportDate: string; // 报告日期 ✅
+  expiryDate: string; // 到期日期 ✅
+  language: string; // 语言 ✅
+  documentStatus: string; // 文档状态 ✅
+  reportType: string; // 文档类型 -报告类型 ✅
 
   // 产品信息
-  productName: string; // 产品名称/系列名
-  brand: string; // 品牌
-  sku: string; // SKU/料号
-  specification: string; // 规格/净含量
-  batchLot: string; // 批次/LOT
+  productName: string; // 产品名称/系列名 ✅
+  brand: string; // 品牌 ✅
+  sku: string; // SKU/料号 ✅
+  specification: string; // 规格/净含量 ✅
+  batchLot: string; // 批次/LOT ✅
 
   // 系统信息
-  reportNumber: string; // 报告编号/唯一文件号
-  sourceSystem: string; // 来源系统
-  documentVersion: string; // 文档版本号
-  fileHash: string; // 文件哈希(完整性校验)
-  accessControl: string; // 访问控制
+  reportNumber: string; // 报告编号/唯一文件号 ✅
+  sourceSystem: string; // 来源系统 ✅
+  documentVersion: string; // 文档版本号 ✅
+  fileHash: string; // 文件哈希(完整性校验) ✅
+  accessControl: string; // 访问控制 ✅
+  accessControlUsers: string; // 访问控制用户
 
   // 扩展信息
   customTags: string; // 自定义标签
@@ -114,6 +133,7 @@ const form = reactive<FormData>({
   expiryDate: "",
   language: "",
   documentStatus: "",
+  reportType: "",
 
   // 产品信息
   productName: "",
@@ -128,6 +148,7 @@ const form = reactive<FormData>({
   documentVersion: "",
   fileHash: "",
   accessControl: "",
+  accessControlUsers: "",
 
   // 扩展信息
   customTags: "",
@@ -142,47 +163,26 @@ const formRules = reactive<FormRules<FormData>>({
   ],
   documentDescription: [
     {
-      required: true,
+      required: false,
       message: "请输入文档描述",
       trigger: "blur"
     }
   ],
-  documentType: [
-    { required: true, message: "请输入文档类型", trigger: "blur" }
-  ],
-  documentPath: [{ required: true, message: "请输入文档路径", trigger: "blur" }]
+  reportType: [{ required: true, message: "请选择文档类型", trigger: "blur" }],
+  documentPath: [
+    { required: false, message: "请输入文档路径", trigger: "blur" }
+  ]
 });
 
-// 表单清空操作
-const clearForm = () => {
-  // console.log("清空表单数据");
-  // 遍历表单数据，将所有字段设为空字符串
-  formRef.value?.resetFields();
-  // 清空上传文件列表
-  uploadFileList.value = [];
-};
+// 表单访问控制是否全选
+const isAccessControlAllSelected = ref(false);
 
-// 处理保存操作
-const handleSave = () => {
-  // 校验表单数据
-  formRef.value?.validate(valid => {
-    if (valid) {
-      console.log("表单数据有效，执行保存操作");
-    } else {
-      // 表单数据无效，提示用户
-      console.log("表单数据无效，提示用户");
-      // 目前只有基本信息需要必填，所有跳到基本信息
-      selectedForm.value = "t-basic";
-    }
-  });
-};
-// 处理取消操作
-const handleCancel = () => {
-  clearForm();
-  // 执行取消回调函数
-  props.cancelCallback();
-};
+//#region 上传文档逻辑 也是数据上传逻辑
+// 上传文档 请求参数
+const uploadRequest = ref({});
 
+const uploadLoading = ref(false);
+const uploadRef = ref<UploadInstance>(null);
 // 上传文档 文件列表
 const uploadFileList = ref<UploadFile[]>([]);
 // 计算属性 判断是否显示上传按钮 true不显示 false显示
@@ -222,10 +222,48 @@ watch(
 );
 // 上传文档 成功回调
 const handleUploadSuccess = (res: any) => {
-  // 对接后端返回的文件路径 暂时不处理，在watch中直接赋值
-  // 上传成功后，将返回的文件路径赋值给form.documentPath
-  form.documentPath = res.data?.filePath || "";
+  uploadLoading.value = false;
+  console.log("上传文档 成功回调", res);
+  if (res?.code === 200) {
+    message("上传文档成功", { type: "success" });
+    // 执行保存回调函数
+    props.saveCallback(form);
+    // 对接后端返回的文件路径 暂时不处理，在watch中直接赋值
+    // 上传成功后，将返回的文件路径赋值给form.documentPath
+    // form.documentPath = res.data?.filePath || "";
+  } else {
+    message(res.msg || "上传文档失败", { type: "error" });
+  }
 };
+// 上传文档 错误回调
+const handleUploadError = (err: any) => {
+  uploadLoading.value = false;
+  console.log("上传文档 错误回调", err);
+  message("上传文档失败", { type: "error" });
+};
+// 上传文档 变化回调
+const handleUploadChange = (file: any) => {
+  // console.log("上传文档 变化回调 file", JSON.stringify(file));
+  if (file.response) {
+    return;
+  }
+  const { name, type, size, lastModified } = file;
+  const dotIndex = file.name.lastIndexOf(".");
+  const fileNameWithoutExtension = file.name.slice(0, dotIndex);
+  const fileExtension = file.name.slice(dotIndex);
+  let fileName = `${fileNameWithoutExtension}_${Date.now()}${fileExtension}`; // 如果可以上传多个文件，这里需要用fileList.forEach()处理
+  let f: any = new File([file.raw], fileName, {
+    type: type,
+    lastModified: lastModified
+  });
+  f.uid = file.uid; // new File 没有uid属性，会导致组件底层报错，这里手动加上
+  file.raw = f; // 用f替换file的数据
+  // console.log("上传文档 变化回调 uploadRef.value", uploadRef.value);
+  // uploadRef.value.submit();
+  // uploadLoading.value = true;
+  // console.log("上传文档 变化回调 file.raw", file.raw);
+};
+//#endregion
 
 // 监听formData变化，如果newVal不为空，则在newVal中遍历出form对象里存在的字段，赋值给form
 watch(
@@ -242,20 +280,236 @@ watch(
 
       // 如果newVal不为空，则赋值给form
       if (newVal && Object.keys(newVal).length > 0) {
-        Object.keys(form).forEach(key => {
-          if (
-            newVal[key] !== undefined &&
-            newVal[key] !== null &&
-            newVal[key] !== ""
-          ) {
-            form[key] = newVal[key];
-          }
-        });
+        // Object.keys(form).forEach(key => {
+        //   if (
+        //     newVal[key] !== undefined &&
+        //     newVal[key] !== null &&
+        //     newVal[key] !== ""
+        //   ) {
+        //     form[key] = newVal[key];
+        //   }
+        // });
+        /** ############################################################################################ **/
+        // 手动赋值
+        const metedate = JSON.parse(newVal.metedate || "{}"); // 解析metedate字段，默认值为空对象
+        form.documentPath = metedate.documentPath || "";
+        form.documentDescription = metedate.documentDescription || "";
+        form.documentTitle = newVal.title || ""; // 文档标题
+        form.reportType = newVal.reportType || ""; // 报告类型
+        form.expiryDate = newVal.expireDate || ""; // 到期日期
+        form.reportDate = newVal.reportDate || ""; // 报告日期
+        form.productName = newVal.productName || ""; // 产品名称
+        form.reportNumber = newVal.reportId || ""; // 报告编号
+        form.sourceSystem = newVal.sourceSystem || ""; // 来源系统
+        form.documentVersion = newVal.version || ""; // 文档版本
+        form.fileHash = newVal.checksum || ""; // 文件哈希值
+        form.brand = newVal.brand || ""; // 品牌
+        form.sku = newVal.sku || ""; // SKU
+        form.specification = newVal.spec || ""; // 规格
+        form.batchLot = newVal.batchNo || ""; // 批次号
+        //TODO: 语言和文档类型 稍后写
+        form.language = newVal.lang || ""; // 语言
+        form.documentStatus = newVal.docStatus || ""; // 文档状态
+        // 处理访问控制
+        form.accessControl = newVal.visibility || ""; // 访问控制
+        if (newVal.visibility === "all") {
+          isAccessControlAllSelected.value = true;
+        } else {
+          isAccessControlAllSelected.value = false;
+        }
+        /** ############################################################################################ **/
       }
     }
   },
   { deep: true, immediate: true }
 );
+
+// 表单清空操作
+const clearForm = () => {
+  // console.log("清空表单数据");
+  // 遍历表单数据，将所有字段设为空字符串
+  formRef.value?.resetFields();
+  // 清空上传文件列表
+  uploadFileList.value = [];
+  // 清空上传请求数据
+  uploadRequest.value = {};
+};
+
+// visibility 的逻辑计算处理
+const calculateVisibility = () => {
+  if (isAccessControlAllSelected) return "all";
+  if (form.accessControl === "") return "all";
+  return form.accessControl;
+};
+
+// 处理保存操作
+const handleSave = () => {
+  // 校验表单数据
+  formRef.value?.validate(valid => {
+    if (valid) {
+      // console.log("表单数据有效，执行保存操作");
+      /** ############################################################################################ **/
+      // 处理上传数据uploadRequest
+
+      if (props.formType === "add") {
+        // 添加模式
+        uploadRequest.value = {
+          metedate: JSON.stringify({
+            documentPath: form.documentPath,
+            documentDescription: form.documentDescription
+          }),
+          visibility: calculateVisibility(),
+          title: form.documentTitle,
+          reportType: form.reportType,
+          expireDate: form.expiryDate,
+          reportDate: form.reportDate,
+          productName: form.productName,
+          reportId: form.reportNumber,
+          sourceSystem: form.sourceSystem,
+          version: form.documentVersion,
+          checksum: form.fileHash,
+          brand: form.brand,
+          sku: form.sku,
+          spec: form.specification,
+          batchNo: form.batchLot,
+          lang: form.language,
+          docStatus: form.documentStatus
+        };
+        uploadRef.value.submit();
+      } else if (props.formType === "edit") {
+        // 编辑模式
+        uploadRequest.value = {
+          ...props.formData,
+          metedate: JSON.stringify({
+            documentPath: form.documentPath,
+            documentDescription: form.documentDescription
+          }),
+          visibility: calculateVisibility(),
+          title: form.documentTitle,
+          reportType: form.reportType,
+          expireDate: form.expiryDate,
+          reportDate: form.reportDate,
+          productName: form.productName,
+          reportId: form.reportNumber,
+          sourceSystem: form.sourceSystem,
+          version: form.documentVersion,
+          checksum: form.fileHash,
+          brand: form.brand,
+          sku: form.sku,
+          spec: form.specification,
+          batchNo: form.batchLot,
+          lang: form.language,
+          docStatus: form.documentStatus
+        };
+        fetchUpdate();
+      }
+      /** ############################################################################################ **/
+      // console.log("uploadRef.value", uploadRef.value);
+
+      uploadLoading.value = true;
+    } else {
+      // 表单数据无效，提示用户
+      console.log("表单数据无效，提示用户");
+      // 目前只有基本信息需要必填，所有跳到基本信息
+      selectedForm.value = "t-basic";
+    }
+  });
+};
+// 处理取消操作
+const handleCancel = () => {
+  clearForm();
+  // 执行取消回调函数
+  props.cancelCallback();
+};
+
+// 更新知识库方法
+const fetchUpdate = async () => {
+  try {
+    const res: any = await postMilvusUpdate(uploadRequest.value);
+    console.log("更新知识库", res);
+    if (res.code === 200) {
+      message("更新知识库成功", { type: "success" });
+      // 刷新数据
+      props.saveCallback();
+    } else {
+      message(res.msg || "更新知识库失败", { type: "error" });
+    }
+    uploadLoading.value = false;
+  } catch (error) {
+    message("更新知识库失败", { type: "error" });
+    uploadLoading.value = false;
+  }
+};
+
+//#region 添加访问控制逻辑 调用钉钉工具
+// 处理全选访问控制操作
+const hanldeAccessControlAllSelected = val => {
+  if (val) {
+    form.accessControl = "all";
+  } else {
+    form.accessControl = "";
+  }
+  // console.log(
+  //   "form.accessControl",
+  //   form.accessControl,
+  //   form.accessControlUsers,
+  //   val
+  // );
+};
+// 权限控制提示文字 计算属性
+const accessControlTip = computed(() => {
+  if (isAccessControlAllSelected.value) {
+    return "已选择 所有 用户";
+  }
+  if (form.accessControl.length > 0) {
+    const accessControlList = form.accessControl.split(",");
+    // console.log("accessControlList", accessControlList);
+    return `已选择 ${accessControlList.length} 位用户`;
+  }
+  return "点击选择可访问此文档的用户";
+});
+// 处理添加访问控制操作
+const handleAddAccessControl = () => {
+  // 判断是否在钉钉环境下
+  if (!navigator.userAgent.includes("DingTalk")) {
+    message("当前环境不是钉钉，无法添加访问控制", { type: "error" });
+    return;
+  }
+  // 在钉钉环境下调用钉钉工具
+  try {
+    dd.biz.contact.choose({
+      multiple: true, //是否多选：true多选 false单选； 默认true
+      users: form.accessControl, //默认选中的用户列表，员工userid；成功回调中应包含该信息
+      corpId: SYSTEM_CONFIG.DINGTALK_CORP_ID, //企业id
+      max: 1500, //人数限制，当multiple为true才生效，可选范围1-1500
+      onSuccess: function (data) {
+        console.log("data", data);
+        /*
+          data结构
+          [
+            {
+              name: "张三", //姓名
+              avatar: "http://g.alicdn.com/avatar/zhangsan.png ", //头像图片url，可能为空
+              emplId: "0573" //员工userid
+            }
+          ];
+        */
+        // 处理选择的用户，将emplId拼接为逗号分隔的字符串
+        if (data.length > 0) {
+          form.accessControl = data.map(item => item.emplId).join(",");
+          form.accessControlUsers = data.map(item => item.name).join(",");
+        }
+        // alert("dd successs: " + JSON.stringify(data));
+      },
+      onFail: function (err) {
+        alert("添加访问控制失败: " + err);
+      }
+    });
+  } catch (error) {
+    alert("添加访问控制失败: " + error);
+  }
+};
+//#endregion
 
 defineExpose({
   clearForm
@@ -298,7 +552,7 @@ defineExpose({
 
         <RowCol>
           <template #left>
-            <el-form-item label="文档类型" prop="documentType">
+            <el-form-item v-show="false" label="文档类型" prop="documentType">
               <el-input
                 v-model="form.documentType"
                 placeholder="上传文档后自动识别"
@@ -307,6 +561,16 @@ defineExpose({
               <div class="text-[12px] text-[#71717a]">
                 系统将根据文件名自动识别文档类型
               </div>
+            </el-form-item>
+            <el-form-item label="文档类型" prop="reportType">
+              <el-select v-model="form.reportType" placeholder="选择文档类型">
+                <el-option
+                  v-for="item in reportTypeEnum"
+                  :key="item.value"
+                  :label="item.value"
+                  :value="item.value"
+                />
+              </el-select>
             </el-form-item>
           </template>
           <template #right>
@@ -318,14 +582,24 @@ defineExpose({
             -->
             <el-form-item label="上传文档" prop="documentPath">
               <!-- 显隐逻辑抽离到计算属性 -->
-              <div v-if="!hasUploadFile" class="w-full h-[32px]">
+              <div v-show="!hasUploadFile" class="w-full h-[32px]">
+                <!-- 上传数据全靠这个接口，参数放到data.request中 -->
                 <el-upload
+                  ref="uploadRef"
                   v-model:file-list="uploadFileList"
-                  action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                  :action="commonUrlApi('/ai/milvus/new')"
+                  :data="{
+                    request: JSON.stringify(uploadRequest)
+                  }"
+                  :headers="{
+                    Authorization: formatToken(getToken().accessToken)
+                  }"
                   :limit="1"
                   :auto-upload="false"
-                  accept=".pdf,.docx,.xlsx,.txt"
-                  @on-success="handleUploadSuccess"
+                  accept=".pdf,.docx"
+                  :on-success="handleUploadSuccess"
+                  :on-change="handleUploadChange"
+                  :on-error="handleUploadError"
                 >
                   <el-button>
                     <IconifyIconOffline
@@ -338,7 +612,7 @@ defineExpose({
               </div>
 
               <div
-                v-if="hasUploadFile"
+                v-show="hasUploadFile"
                 class="peidi-manage-data-dialog-upload-alert w-full"
               >
                 <el-alert
@@ -361,9 +635,7 @@ defineExpose({
                 </el-alert>
               </div>
 
-              <div class="text-[12px] text-[#71717a]">
-                支持 PDF, Word, Excel, TXT 格式
-              </div>
+              <div class="text-[12px] text-[#71717a]">支持 PDF, DOCX 格式</div>
             </el-form-item>
           </template>
         </RowCol>
@@ -394,7 +666,11 @@ defineExpose({
         <RowCol>
           <template #left>
             <el-form-item label="语言" prop="language">
-              <el-select v-model="form.language" placeholder="选择语言">
+              <el-select
+                v-model="form.language"
+                placeholder="选择语言"
+                clearable
+              >
                 <el-option label="中文" value="zh" />
                 <el-option label="英文" value="en" />
               </el-select>
@@ -405,10 +681,14 @@ defineExpose({
               <el-select
                 v-model="form.documentStatus"
                 placeholder="选择文档状态"
+                clearable
               >
-                <el-option label="有效" value="valid" />
-                <el-option label="草稿" value="draft" />
-                <el-option label="已过期" value="expired" />
+                <el-option
+                  v-for="item in docStatusEnum"
+                  :key="item.id"
+                  :label="item.value"
+                  :value="item.id"
+                />
               </el-select> </el-form-item
           ></template>
         </RowCol>
@@ -487,10 +767,48 @@ defineExpose({
           />
         </el-form-item> -->
         <el-form-item label="访问控制" prop="accessControl">
-          <el-input
+          <!-- <el-input
             v-model="form.accessControl"
             placeholder="如: engineering/manufacturing, public"
-          />
+          /> -->
+          <!-- <el-button class="w-[100%] text-left" size="large" :icon="RiUser3Line"
+            >添加访问控制</el-button
+          > -->
+          <div class="w-[100%] flex items-center">
+            <el-checkbox
+              v-model="isAccessControlAllSelected"
+              label="全部用户"
+              size="large"
+              @change="hanldeAccessControlAllSelected"
+            />
+            <div
+              class="ml-[10px] flex items-center text-[12px] text-[#71717a] bg-[#f5f5f5] rounded-[5px] px-[5px] py-[2px] h-[24px]"
+            >
+              <IconifyIconOffline
+                :icon="RiInformation2Fill"
+                class="w-[16px] h-[16px] mr-[3px]"
+              />若要单独添加访问控制，请先取消选择全部用户
+            </div>
+          </div>
+          <div
+            v-show="!isAccessControlAllSelected"
+            class="w-[100%] flex items-center text-[#000] border border-[#71717a35] rounded-[5px] px-[10px] py-[5px] cursor-pointer hover:bg-[#71717a15]"
+            @click="handleAddAccessControl"
+          >
+            <IconifyIconOffline :icon="RiUser3Line" />
+            <div class="ml-[5px]">添加访问控制</div>
+          </div>
+          <div class="w-[100%] text-[12px] text-[#71717a]">
+            {{ accessControlTip }}
+          </div>
+          <div
+            v-show="
+              !isAccessControlAllSelected && form.accessControlUsers.length > 0
+            "
+            class="w-[100%] text-[12px] text-[#71717a]"
+          >
+            已选择用户: {{ form.accessControlUsers }}
+          </div>
         </el-form-item>
       </div>
 
@@ -533,7 +851,11 @@ defineExpose({
       <el-form-item>
         <div class="w-[100%] mt-[20px] flex justify-end">
           <el-button size="large" @click="handleCancel">取消</el-button>
-          <el-button size="large" type="primary" @click="handleSave"
+          <el-button
+            size="large"
+            type="primary"
+            :loading="uploadLoading"
+            @click="handleSave"
             >保存</el-button
           >
         </div>

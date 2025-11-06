@@ -66,7 +66,11 @@ const userTableData = computed(() => {
         <el-table-column prop="user" label="用户" width="180">
           <template #default="scope">
             <div class="flex items-center">
-              <img class="w-[32px]" :src="userAvatar" :style="avatarsStyle" />
+              <img
+                class="w-[24px] mr-[5px]"
+                :src="userAvatar"
+                :style="avatarsStyle"
+              />
               {{ scope.row.user }}
             </div>
           </template>

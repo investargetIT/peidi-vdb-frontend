@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { MARKDOWN_EXAMPLE } from "@/views/debug/markdown/data/markdown";
 import Vditor from "vditor";
 import "vditor/dist/index.css";
@@ -9,11 +9,19 @@ const props = defineProps({
   height: {
     type: Number,
     default: 750
+  },
+  data: {
+    type: String,
+    required: true
   }
 });
 
+// loading状态
+const loading = ref(true);
+
 const vditor = ref();
 function initVditor() {
+  loading.value = true;
   vditor.value = new Vditor("pridi-manage-markdown-vditor", {
     mode: "sv",
     height: props.height,
@@ -25,7 +33,7 @@ function initVditor() {
     },
     after: () => {
       vditor.value.disabledCache(); // 禁用缓存，否则会导致预览时显示缓存内容
-      vditor.value.setValue(MARKDOWN_EXAMPLE);
+      vditor.value.setValue(props.data);
       const vditorsv: HTMLElement = document.querySelector(
         ".peidi-manage-markdown .vditor-sv"
       );
@@ -34,17 +42,32 @@ function initVditor() {
         ".peidi-manage-markdown .vditor-toolbar"
       );
       vditorPreview.style.display = "none";
+      loading.value = false;
     }
   });
 }
+// 集成到watch中
+// onMounted(() => {
+//   initVditor();
+// });
 
-onMounted(() => {
-  initVditor();
-});
+watch(
+  () => props.data,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal && newVal) {
+      initVditor();
+    }
+  },
+  { deep: true, immediate: true }
+);
 </script>
 
 <template>
-  <div class="peidi-manage-markdown">
-    <div id="pridi-manage-markdown-vditor" />
+  <div
+    v-loading="loading"
+    class="peidi-manage-markdown"
+    :style="{ height: height + 'px' }"
+  >
+    <div v-show="!loading" id="pridi-manage-markdown-vditor" />
   </div>
 </template>

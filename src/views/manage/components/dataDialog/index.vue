@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { inject, reactive, ref } from "vue";
 import NormalForm from "./normalForm.vue";
 export type DialogType = "add" | "edit";
 
@@ -36,6 +36,16 @@ const handleBeforeClose = () => {
   // 为了解决点击x 关闭弹窗时，表单数据未清空的问题
   normalFormRef.value?.clearForm();
 };
+
+// 获取分页数据方法
+const fetchMilvusPage = inject<() => void>("fetchMilvusPage");
+// 成功提交表单事件
+const handleNormalFormSubmit = () => {
+  // 刷新分页数据
+  fetchMilvusPage();
+  // 关闭弹窗
+  closeDataDialog();
+};
 </script>
 
 <template>
@@ -64,7 +74,7 @@ const handleBeforeClose = () => {
     <NormalForm
       ref="normalFormRef"
       :cancel-callback="closeDataDialog"
-      :save-callback="closeDataDialog"
+      :save-callback="handleNormalFormSubmit"
       :form-data="formData"
       :form-type="dialogType"
     />

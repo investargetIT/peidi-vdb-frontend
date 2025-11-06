@@ -1,4 +1,5 @@
 import { $t } from "@/plugins/i18n";
+import { isDevEnv } from "@/utils/debug";
 const Layout = () => import("@/layout/index.vue");
 
 export default [
@@ -10,7 +11,7 @@ export default [
     meta: {
       icon: "ri/user-settings-line",
       title: $t("pd.menus.userManage"),
-      showLink: true,
+      showLink: isDevEnv(),
       rank: 100
     },
     children: [

@@ -34,9 +34,40 @@ export type RefreshTokenResult = {
   };
 };
 
+const commonUrlApi = (url: string) => `${"https://user.peidigroup.cn"}${url}`;
+
 /** 登录 */
 export const getLogin = (data?: object) => {
-  return http.request<UserResult>("post", "/login", { data });
+  // return http.request<UserResult>("post", "/login", { data });
+  return http.request<UserResult>(
+    "post",
+    commonUrlApi("/user/login/password"),
+    {
+      data,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    }
+  );
+};
+
+// 根据code拿到个人信息
+export const getUserInfo = code => {
+  return http.request("get", commonUrlApi(`/ding/userInfo?code=${code}`), {});
+};
+
+// 注册
+export const register = data => {
+  return http.request("post", commonUrlApi(`/user/email-register`), {
+    data
+  });
+};
+
+// 调用手机注册接口 -新版
+export const registerMobile = data => {
+  return http.request("post", commonUrlApi(`/user/sms-register`), {
+    data
+  });
 };
 
 /** 刷新`token` */
