@@ -9,8 +9,12 @@ import {
 } from "element-plus";
 import SolarUploadMinimalisticOutline from "~icons/solar/upload-minimalistic-outline";
 import TablerFile from "~icons/tabler/file";
+import RiUser3Line from "~icons/ri/user-3-line";
+import RiInformation2Fill from "~icons/ri/information-2-fill";
 import { commonUrlApi, postMilvusUpdate } from "@/api/vdb";
 import { message } from "@/utils/message";
+import * as dd from "dingtalk-jsapi";
+import { SYSTEM_CONFIG } from "@/constants";
 
 const props = defineProps({
   // 保存回调函数
@@ -40,6 +44,9 @@ const props = defineProps({
 });
 
 // 获取文档状态枚举
+const docStatusEnum = inject<any[]>("docStatusEnum");
+
+// 获取文档类型枚举
 const reportTypeEnum = inject<any[]>("reportTypeEnum");
 
 // 当前选择的表单类别
@@ -85,27 +92,28 @@ interface FormData {
   // 基本信息
   documentTitle: string; // 文档标题 ✅(已使用)
   documentDescription: string; // 文档描述
-  documentType: string; // 文档类型
+  documentType: string; // 文档类型 ✅
   documentPath: string; // 文档路径
-  reportDate: string; // 报告日期
-  expiryDate: string; // 到期日期
-  language: string; // 语言
-  documentStatus: string; // 文档状态
+  reportDate: string; // 报告日期 ✅
+  expiryDate: string; // 到期日期 ✅
+  language: string; // 语言 ✅
+  documentStatus: string; // 文档状态 ✅
   reportType: string; // 文档类型 -报告类型 ✅
 
   // 产品信息
-  productName: string; // 产品名称/系列名
-  brand: string; // 品牌
-  sku: string; // SKU/料号
-  specification: string; // 规格/净含量
-  batchLot: string; // 批次/LOT
+  productName: string; // 产品名称/系列名 ✅
+  brand: string; // 品牌 ✅
+  sku: string; // SKU/料号 ✅
+  specification: string; // 规格/净含量 ✅
+  batchLot: string; // 批次/LOT ✅
 
   // 系统信息
-  reportNumber: string; // 报告编号/唯一文件号
-  sourceSystem: string; // 来源系统
-  documentVersion: string; // 文档版本号
-  fileHash: string; // 文件哈希(完整性校验)
-  accessControl: string; // 访问控制
+  reportNumber: string; // 报告编号/唯一文件号 ✅
+  sourceSystem: string; // 来源系统 ✅
+  documentVersion: string; // 文档版本号 ✅
+  fileHash: string; // 文件哈希(完整性校验) ✅
+  accessControl: string; // 访问控制 ✅
+  accessControlUsers: string; // 访问控制用户
 
   // 扩展信息
   customTags: string; // 自定义标签
@@ -139,6 +147,7 @@ const form = reactive<FormData>({
   documentVersion: "",
   fileHash: "",
   accessControl: "",
+  accessControlUsers: "",
 
   // 扩展信息
   customTags: "",
@@ -163,6 +172,9 @@ const formRules = reactive<FormRules<FormData>>({
     { required: false, message: "请输入文档路径", trigger: "blur" }
   ]
 });
+
+// 表单访问控制是否全选
+const isAccessControlAllSelected = ref(false);
 
 //#region 上传文档逻辑 也是数据上传逻辑
 // 上传文档 请求参数
@@ -279,9 +291,31 @@ watch(
         /** ############################################################################################ **/
         // 手动赋值
         const metedate = JSON.parse(newVal.metedate || "{}"); // 解析metedate字段，默认值为空对象
-        form.documentTitle = newVal.title || "";
-        form.reportType = newVal.reportType || "";
         form.documentPath = metedate.documentPath || "";
+        form.documentDescription = metedate.documentDescription || "";
+        form.documentTitle = newVal.title || ""; // 文档标题
+        form.reportType = newVal.reportType || ""; // 报告类型
+        form.expiryDate = newVal.expireDate || ""; // 到期日期
+        form.reportDate = newVal.reportDate || ""; // 报告日期
+        form.productName = newVal.productName || ""; // 产品名称
+        form.reportNumber = newVal.reportId || ""; // 报告编号
+        form.sourceSystem = newVal.sourceSystem || ""; // 来源系统
+        form.documentVersion = newVal.version || ""; // 文档版本
+        form.fileHash = newVal.checksum || ""; // 文件哈希值
+        form.brand = newVal.brand || ""; // 品牌
+        form.sku = newVal.sku || ""; // SKU
+        form.specification = newVal.spec || ""; // 规格
+        form.batchLot = newVal.batchNo || ""; // 批次号
+        //TODO: 语言和文档类型 稍后写
+        form.language = newVal.lang || ""; // 语言
+        form.documentStatus = newVal.docStatus || ""; // 文档状态
+        // 处理访问控制
+        form.accessControl = newVal.visibility || ""; // 访问控制
+        if (newVal.visibility === "all") {
+          isAccessControlAllSelected.value = true;
+        } else {
+          isAccessControlAllSelected.value = false;
+        }
         /** ############################################################################################ **/
       }
     }
@@ -312,18 +346,56 @@ const handleSave = () => {
       if (props.formType === "add") {
         // 添加模式
         uploadRequest.value = {
+          metedate: JSON.stringify({
+            documentPath: form.documentPath,
+            documentDescription: form.documentDescription
+          }),
+          visibility: isAccessControlAllSelected.value
+            ? "all"
+            : form.accessControl,
           title: form.documentTitle,
           reportType: form.reportType,
-          visibility: "all", // 可见人
-          metedate: JSON.stringify({ documentPath: form.documentPath })
+          expireDate: form.expiryDate,
+          reportDate: form.reportDate,
+          productName: form.productName,
+          reportId: form.reportNumber,
+          sourceSystem: form.sourceSystem,
+          version: form.documentVersion,
+          checksum: form.fileHash,
+          brand: form.brand,
+          sku: form.sku,
+          spec: form.specification,
+          batchNo: form.batchLot,
+          lang: form.language,
+          docStatus: form.documentStatus
         };
         uploadRef.value.submit();
       } else if (props.formType === "edit") {
         // 编辑模式
         uploadRequest.value = {
           ...props.formData,
+          metedate: JSON.stringify({
+            documentPath: form.documentPath,
+            documentDescription: form.documentDescription
+          }),
+          visibility: isAccessControlAllSelected.value
+            ? "all"
+            : form.accessControl,
           title: form.documentTitle,
-          reportType: form.reportType
+          reportType: form.reportType,
+          expireDate: form.expiryDate,
+          reportDate: form.reportDate,
+          productName: form.productName,
+          reportId: form.reportNumber,
+          sourceSystem: form.sourceSystem,
+          version: form.documentVersion,
+          checksum: form.fileHash,
+          brand: form.brand,
+          sku: form.sku,
+          spec: form.specification,
+          batchNo: form.batchLot,
+          lang: form.language,
+          docStatus: form.documentStatus
         };
         fetchUpdate();
       }
@@ -364,6 +436,76 @@ const fetchUpdate = async () => {
     uploadLoading.value = false;
   }
 };
+
+//#region 添加访问控制逻辑 调用钉钉工具
+// 处理全选访问控制操作
+const hanldeAccessControlAllSelected = val => {
+  if (val) {
+    form.accessControl = "all";
+  } else {
+    form.accessControl = "";
+  }
+  // console.log(
+  //   "form.accessControl",
+  //   form.accessControl,
+  //   form.accessControlUsers,
+  //   val
+  // );
+};
+// 权限控制提示文字 计算属性
+const accessControlTip = computed(() => {
+  if (isAccessControlAllSelected.value) {
+    return "已选择 所有 用户";
+  }
+  if (form.accessControl.length > 0) {
+    const accessControlList = form.accessControl.split(",");
+    // console.log("accessControlList", accessControlList);
+    return `已选择 ${accessControlList.length} 位用户`;
+  }
+  return "点击选择可访问此文档的用户";
+});
+// 处理添加访问控制操作
+const handleAddAccessControl = () => {
+  // 判断是否在钉钉环境下
+  if (!navigator.userAgent.includes("DingTalk")) {
+    message("当前环境不是钉钉，无法添加访问控制", { type: "error" });
+    return;
+  }
+  // 在钉钉环境下调用钉钉工具
+  try {
+    dd.biz.contact.choose({
+      multiple: true, //是否多选：true多选 false单选； 默认true
+      users: form.accessControl, //默认选中的用户列表，员工userid；成功回调中应包含该信息
+      corpId: SYSTEM_CONFIG.DINGTALK_CORP_ID, //企业id
+      max: 1500, //人数限制，当multiple为true才生效，可选范围1-1500
+      onSuccess: function (data) {
+        console.log("data", data);
+        /*
+          data结构
+          [
+            {
+              name: "张三", //姓名
+              avatar: "http://g.alicdn.com/avatar/zhangsan.png ", //头像图片url，可能为空
+              emplId: "0573" //员工userid
+            }
+          ];
+        */
+        // 处理选择的用户，将emplId拼接为逗号分隔的字符串
+        if (data.length > 0) {
+          form.accessControl = data.map(item => item.emplId).join(",");
+          form.accessControlUsers = data.map(item => item.name).join(",");
+        }
+        // alert("dd successs: " + JSON.stringify(data));
+      },
+      onFail: function (err) {
+        alert("添加访问控制失败: " + err);
+      }
+    });
+  } catch (error) {
+    alert("添加访问控制失败: " + error);
+  }
+};
+//#endregion
 
 defineExpose({
   clearForm
@@ -517,7 +659,11 @@ defineExpose({
         <RowCol>
           <template #left>
             <el-form-item label="语言" prop="language">
-              <el-select v-model="form.language" placeholder="选择语言">
+              <el-select
+                v-model="form.language"
+                placeholder="选择语言"
+                clearable
+              >
                 <el-option label="中文" value="zh" />
                 <el-option label="英文" value="en" />
               </el-select>
@@ -528,10 +674,14 @@ defineExpose({
               <el-select
                 v-model="form.documentStatus"
                 placeholder="选择文档状态"
+                clearable
               >
-                <el-option label="有效" value="valid" />
-                <el-option label="草稿" value="draft" />
-                <el-option label="已过期" value="expired" />
+                <el-option
+                  v-for="item in docStatusEnum"
+                  :key="item.id"
+                  :label="item.value"
+                  :value="item.id"
+                />
               </el-select> </el-form-item
           ></template>
         </RowCol>
@@ -610,10 +760,48 @@ defineExpose({
           />
         </el-form-item> -->
         <el-form-item label="访问控制" prop="accessControl">
-          <el-input
+          <!-- <el-input
             v-model="form.accessControl"
             placeholder="如: engineering/manufacturing, public"
-          />
+          /> -->
+          <!-- <el-button class="w-[100%] text-left" size="large" :icon="RiUser3Line"
+            >添加访问控制</el-button
+          > -->
+          <div class="w-[100%] flex items-center">
+            <el-checkbox
+              v-model="isAccessControlAllSelected"
+              label="全部用户"
+              size="large"
+              @change="hanldeAccessControlAllSelected"
+            />
+            <div
+              class="ml-[10px] flex items-center text-[12px] text-[#71717a] bg-[#f5f5f5] rounded-[5px] px-[5px] py-[2px] h-[24px]"
+            >
+              <IconifyIconOffline
+                :icon="RiInformation2Fill"
+                class="w-[16px] h-[16px] mr-[3px]"
+              />若要单独添加访问控制，请先取消选择全部用户
+            </div>
+          </div>
+          <div
+            v-show="!isAccessControlAllSelected"
+            class="w-[100%] flex items-center text-[#000] border border-[#71717a35] rounded-[5px] px-[10px] py-[5px] cursor-pointer hover:bg-[#71717a15]"
+            @click="handleAddAccessControl"
+          >
+            <IconifyIconOffline :icon="RiUser3Line" />
+            <div class="ml-[5px]">添加访问控制</div>
+          </div>
+          <div class="w-[100%] text-[12px] text-[#71717a]">
+            {{ accessControlTip }}
+          </div>
+          <div
+            v-show="
+              !isAccessControlAllSelected && form.accessControlUsers.length > 0
+            "
+            class="w-[100%] text-[12px] text-[#71717a]"
+          >
+            已选择用户: {{ form.accessControlUsers }}
+          </div>
         </el-form-item>
       </div>
 

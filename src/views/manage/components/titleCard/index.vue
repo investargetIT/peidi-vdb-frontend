@@ -9,6 +9,10 @@ const props = defineProps({
   text: {
     type: String,
     required: true
+  },
+  dataList: {
+    type: Array,
+    required: true
   }
 });
 </script>
@@ -34,7 +38,9 @@ const props = defineProps({
       <div class="w-[33%]">
         <div class="text-[14px] text-[#52525B]">数据量:</div>
         <!-- <div class="text-[14px] text-[#09090B]">156 条</div> -->
-        <div class="text-[14px] text-[#09090B]">--</div>
+        <div class="text-[14px] text-[#09090B]">
+          {{ props.dataList.length }} 条
+        </div>
       </div>
     </div>
   </el-card>

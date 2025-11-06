@@ -18,29 +18,55 @@ const props = defineProps({
   }
 });
 
-const dataBlocks = [
-  {
-    title: "总数据量",
-    value: Number(0).toLocaleString(),
-    color: "#155dfc"
-  },
-  {
-    title: "向量维度",
-    value: Number(0).toLocaleString(),
-    color: "#00a63e"
-  },
-  {
-    title: "有效数据",
-    value: Number(0).toLocaleString(),
-    color: "#9810fa"
-  },
-  {
-    title: "最后更新",
-    // value: "2023年11月20日",
-    value: "--",
-    color: "#f54900"
-  }
-];
+const dataBlocks = computed(() => {
+  return [
+    {
+      title: "总数据量",
+      value: Number(props.tableData.length).toLocaleString(),
+      color: "#155dfc"
+    },
+    {
+      title: "向量维度",
+      value: Number(0).toLocaleString(),
+      color: "#00a63e"
+    },
+    {
+      title: "有效数据",
+      value: Number(0).toLocaleString(),
+      color: "#9810fa"
+    },
+    {
+      title: "最后更新",
+      // value: "2023年11月20日",
+      value: "--",
+      color: "#f54900"
+    }
+  ];
+});
+
+// const dataBlocks = [
+//   {
+//     title: "总数据量",
+//     value: Number(0).toLocaleString(),
+//     color: "#155dfc"
+//   },
+//   {
+//     title: "向量维度",
+//     value: Number(0).toLocaleString(),
+//     color: "#00a63e"
+//   },
+//   {
+//     title: "有效数据",
+//     value: Number(0).toLocaleString(),
+//     color: "#9810fa"
+//   },
+//   {
+//     title: "最后更新",
+//     // value: "2023年11月20日",
+//     value: "--",
+//     color: "#f54900"
+//   }
+// ];
 
 //#region 搜索数据逻辑
 const dataSearch = ref("");

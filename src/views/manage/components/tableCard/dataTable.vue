@@ -21,7 +21,7 @@ const props = defineProps({
 //   { id: 110, value: "obsolete", type: "docStatus" },
 //   { id: 111, value: "draft", type: "docStatus" }
 // ];
-const docStatusEnum = inject<any[]>("docStatusEnum");
+const docStatusEnum = inject<any>("docStatusEnum");
 const judgeStatusType = status => {
   switch (status) {
     case "109":
@@ -38,9 +38,11 @@ const judgeStatusType = status => {
 const judgeStatusLabel = computed(() => {
   return id => {
     // console.log("docStatusEnum:", docStatusEnum);
-    const docStatusEnumArray = Array.from(docStatusEnum);
+    const docStatusEnumArray = docStatusEnum?.value || [];
+    // console.log("docStatusEnumArray:", docStatusEnumArray);
     if (docStatusEnumArray.length === 0) return "valid";
-    const statusItem = docStatusEnumArray?.find(item => item.id === id);
+    const statusItem = docStatusEnumArray?.find(item => item.id === Number(id));
+    // console.log("statusItem:", statusItem);
     return statusItem?.value || "valid";
   };
 });

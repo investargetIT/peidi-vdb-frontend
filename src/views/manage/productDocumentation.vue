@@ -215,6 +215,7 @@ onMounted(async () => {
         <TitleCard
           :title="handleTitleCardTitle().title"
           :text="handleTitleCardTitle().subTitle"
+          :dataList="milvusPageList"
         />
         <!-- 数据列表卡片 -->
         <div class="mt-[25px]" />
