@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { MARKDOWN_EXAMPLE } from "@/views/debug/markdown/data/markdown";
 import Vditor from "vditor";
 import "vditor/dist/index.css";
@@ -51,6 +51,12 @@ function initVditor() {
 //   initVditor();
 // });
 
+onBeforeUnmount(() => {
+  if (vditor.value) {
+    vditor.value.destroy();
+  }
+});
+
 watch(
   () => props.data,
   (newVal, oldVal) => {
@@ -65,9 +71,16 @@ watch(
 <template>
   <div
     v-loading="loading"
+    element-loading-text="首次加载比较慢，请稍后"
     class="peidi-manage-markdown"
     :style="{ height: height + 'px' }"
   >
     <div v-show="!loading" id="pridi-manage-markdown-vditor" />
   </div>
 </template>
+
+<style lang="scss" scoped>
+:deep(.vditor-reset) {
+  max-width: 100% !important; // 这里important是为了覆盖vditor的样式
+}
+</style>

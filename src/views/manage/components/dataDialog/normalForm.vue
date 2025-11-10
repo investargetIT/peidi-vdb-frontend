@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, reactive, ref, watch } from "vue";
+import { computed, inject, onMounted, reactive, ref, watch } from "vue";
 import RowCol from "@/views/manage/components/dataDialog/rowCol.vue";
 import {
   FormInstance,
@@ -333,11 +333,13 @@ const clearForm = () => {
   uploadFileList.value = [];
   // 清空上传请求数据
   uploadRequest.value = {};
+  // 清空勾选访问控制
+  isAccessControlAllSelected.value = false;
 };
 
 // visibility 的逻辑计算处理
 const calculateVisibility = () => {
-  if (isAccessControlAllSelected) return "all";
+  if (isAccessControlAllSelected.value) return "all";
   if (form.accessControl === "") return "all";
   return form.accessControl;
 };
@@ -511,6 +513,17 @@ const handleAddAccessControl = () => {
 };
 //#endregion
 
+// 文件名省略方法
+const ellipsisFileName = (fileName: string, maxLength: number = 10) => {
+  if (!fileName) {
+    return "";
+  }
+  if (fileName.length <= maxLength) {
+    return fileName;
+  }
+  return fileName.substring(0, maxLength) + "...";
+};
+
 defineExpose({
   clearForm
 });
@@ -596,7 +609,7 @@ defineExpose({
                   }"
                   :limit="1"
                   :auto-upload="false"
-                  accept=".pdf,.docx"
+                  accept=".pdf,.docx,.doc,.xlsx,.xls"
                   :on-success="handleUploadSuccess"
                   :on-change="handleUploadChange"
                   :on-error="handleUploadError"
@@ -618,8 +631,8 @@ defineExpose({
                 <el-alert
                   :title="
                     props.formType === 'add'
-                      ? uploadFileList[0]?.name
-                      : form.documentPath
+                      ? ellipsisFileName(uploadFileList[0]?.name)
+                      : ellipsisFileName(form.documentPath)
                   "
                   type="info"
                   :closable="props.formType === 'add'"
@@ -635,7 +648,9 @@ defineExpose({
                 </el-alert>
               </div>
 
-              <div class="text-[12px] text-[#71717a]">支持 PDF, DOCX 格式</div>
+              <div class="text-[12px] text-[#71717a]">
+                支持 PDF, DOCX, DOC, XLSX, XLS 格式
+              </div>
             </el-form-item>
           </template>
         </RowCol>

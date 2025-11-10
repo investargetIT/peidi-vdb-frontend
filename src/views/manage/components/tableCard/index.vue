@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
+import { computed, inject, ref, watch } from "vue";
 import DataBlock from "./dataBlock.vue";
 import Search from "~icons/ep/search";
 import RiAddLargeLine from "~icons/ri/add-large-line";
 import DataTable from "./dataTable.vue";
 import type { DataDialogMethods } from "@/views/manage/productDocumentation.vue";
+import _ from "lodash";
 
 // props
 const props = defineProps({
@@ -18,11 +19,13 @@ const props = defineProps({
   }
 });
 
+const pageParamsGettersSetters = inject<any>("pageParamsGettersSetters");
+
 const dataBlocks = computed(() => {
   return [
     {
       title: "总数据量",
-      value: Number(props.tableData.length).toLocaleString(),
+      value: Number(0).toLocaleString(),
       color: "#155dfc"
     },
     {
@@ -71,15 +74,33 @@ const dataBlocks = computed(() => {
 //#region 搜索数据逻辑
 const dataSearch = ref("");
 // 搜索后的表格数据
-const filteredTableData = computed(() => {
-  if (!dataSearch.value) {
-    return props.tableData;
+// const filteredTableData = computed(() => {
+//   if (!dataSearch.value) {
+//     return props.tableData;
+//   }
+//   return props.tableData.filter(item =>
+//     item.title.toLowerCase().includes(dataSearch.value.toLowerCase())
+//   );
+// });
+watch(dataSearch, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    console.log("dataSearch.value", dataSearch.value);
+    _.debounce(() => {
+      pageParamsGettersSetters.setPageParams({
+        searchStr:
+          newVal === ""
+            ? []
+            : [
+                {
+                  searchName: "title",
+                  searchType: "like",
+                  searchValue: `${newVal}`
+                }
+              ]
+      });
+    }, 1000)();
   }
-  return props.tableData.filter(item =>
-    item.title.toLowerCase().includes(dataSearch.value.toLowerCase())
-  );
 });
-
 //#endregion
 
 // 数据详情弹窗方法
@@ -131,7 +152,7 @@ const handleAddDataClick = () => {
         <!-- 数据列表-表格 -->
         <DataTable
           v-loading="props.tableLoading"
-          :tableDataSource="filteredTableData"
+          :tableDataSource="tableData"
         />
       </div>
     </div>

@@ -14,6 +14,7 @@ import RiFolder5Line from "~icons/ri/folder-5-line?raw";
 import RiBugLine from "~icons/ri/bug-line?raw";
 import RiUserSettingsLine from "~icons/ri/user-settings-line?raw";
 import RiFolderLine from "~icons/ri/folder-line?raw";
+import EpFolderAdd from "~icons/ep/folder-add?raw";
 
 const icons = [
   // Element Plus Icon: https://github.com/element-plus/element-plus-icons
@@ -26,7 +27,8 @@ const icons = [
   ["ri/folder-5-line", RiFolder5Line],
   ["ri/bug-line", RiBugLine],
   ["ri/user-settings-line", RiUserSettingsLine],
-  ["ri/folder-line", RiFolderLine]
+  ["ri/folder-line", RiFolderLine],
+  ["ep/folder-add", EpFolderAdd]
 ];
 
 // 本地菜单图标，后端在路由的 icon 中返回对应的图标字符串并且前端在此处使用 addIcon 添加即可渲染菜单图标

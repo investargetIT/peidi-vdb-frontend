@@ -25,9 +25,12 @@ import { usePermissionStoreHook } from "@/store/modules/permission";
 const IFrame = () => import("@/layout/frame.vue");
 // https://cn.vitejs.dev/guide/features.html#glob-import
 const modulesRoutes = import.meta.glob("/src/views/**/*.{vue,tsx}");
+const Layout = () => import("@/layout/index.vue");
 
 // 动态路由
 import { getAsyncRoutes } from "@/api/routes";
+import { getCommonEnum } from "@/api/vdb";
+import { message } from "@/utils/message";
 
 function handRank(routeInfo: any) {
   const { name, path, parentId, meta } = routeInfo;
@@ -213,10 +216,57 @@ function initRouter() {
     }
   } else {
     return new Promise(resolve => {
-      getAsyncRoutes().then(({ data }) => {
-        handleAsyncRoutes(cloneDeep(data));
-        resolve(router);
-      });
+      // 获取异步路由 这里根据枚举 reportType 动态添加路由
+      getCommonEnum("reportType")
+        .then((res: any) => {
+          if (res?.code === 200) {
+            // 处理成功逻辑
+            const temp = [
+              {
+                path: "/manage",
+                name: "ManageLayout",
+                redirect: "/manage",
+                component: Layout,
+                meta: {
+                  icon: "ri/folder-5-line",
+                  title: "向量数据库管理",
+                  showLink: true,
+                  rank: 10
+                },
+                children: []
+              }
+            ];
+            if (res?.data?.length > 0) {
+              // 遍历枚举值，动态添加路由
+              res?.data?.forEach(item => {
+                temp[0].children.push({
+                  path: `/manage/${item.id}`,
+                  name: `Manage${item.id}`,
+                  component: () =>
+                    import("@/views/manage/productDocumentation.vue"),
+                  meta: {
+                    title: item.value,
+                    icon: "ri/folder-line"
+                  }
+                });
+              });
+            }
+            handleAsyncRoutes(cloneDeep(temp));
+            resolve(router);
+          } else {
+            // 处理失败逻辑
+            message("请求报告类型失败", { type: "error" });
+          }
+        })
+        .catch(() => {
+          // 处理失败逻辑
+          message("请求报告类型失败", { type: "error" });
+        });
+
+      // getAsyncRoutes().then(({ data }) => {
+      //   handleAsyncRoutes(cloneDeep(data));
+      //   resolve(router);
+      // });
     });
   }
 }
@@ -303,6 +353,8 @@ function handleAliveRoute({ name }: ToRouteType, mode?: string) {
 /** 过滤后端传来的动态路由 重新生成规范路由 */
 function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
   if (!arrRoutes || !arrRoutes.length) return;
+  // 不做处理
+  return arrRoutes;
   const modulesRoutesKeys = Object.keys(modulesRoutes);
   arrRoutes.forEach((v: RouteRecordRaw) => {
     // 将backstage属性加入meta，标识此路由为后端返回路由

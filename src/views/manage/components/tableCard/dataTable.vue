@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import EpEdit from "~icons/ep/edit";
 import EpDelete from "~icons/ep/delete";
+import EpDownload from "~icons/ep/download";
+import IconParkOutlinePreviewOpen from "~icons/icon-park-outline/preview-open";
 import { computed, inject, reactive, ref, watch } from "vue";
 import type { DataDialogMethods } from "@/views/manage/productDocumentation.vue";
 import { ElMessageBox } from "element-plus";
-import { postMilvusDelete } from "@/api/vdb";
+import {
+  getCommonDownload,
+  getCommonDownloadUrl,
+  postMilvusDelete
+} from "@/api/vdb";
 import { message } from "@/utils/message";
 
 // props
@@ -65,8 +71,18 @@ let tableData = ref<any>([
 // tableData = tableData.flatMap(item => Array(n).fill(item));
 //#endregion
 
-const currentPage = ref(1);
-const pageSize = ref(10);
+//#region 分页相关逻辑
+// 注入分页参数和分页结果
+const pageParamsGettersSetters = inject<any>("pageParamsGettersSetters");
+const currentPage = computed(() => {
+  return pageParamsGettersSetters.getPageResult().current;
+});
+const pageSize = computed(() => {
+  return pageParamsGettersSetters.getPageResult().size;
+});
+const pageTotal = computed(() => {
+  return pageParamsGettersSetters.getPageResult().total;
+});
 // 计算属性 -当前页数据
 const currentPageData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
@@ -76,12 +92,22 @@ const currentPageData = computed(() => {
 
 const handleSizeChange = size => {
   console.log("每页条数:", size);
-  pageSize.value = size;
+  // pageSize.value = size;
+  // 更新分页参数
+  pageParamsGettersSetters.setPageParams({
+    pageSize: size
+  });
 };
 const handleCurrentChange = page => {
   console.log("当前页码:", page);
-  currentPage.value = page;
+  // currentPage.value = page;
+  // 更新分页参数
+  pageParamsGettersSetters.setPageParams({
+    pageNo: page
+  });
 };
+
+//#endregion
 
 // 数据详情弹窗方法
 const dataDialogMethods = inject<DataDialogMethods>("dataDialogMethods");
@@ -94,7 +120,7 @@ const handleEditClick = row => {
 watch(
   () => props.tableDataSource,
   (newVal, oldVal) => {
-    if (newVal.length > 0 && newVal !== oldVal) {
+    if (newVal !== oldVal) {
       console.log("tableDataSource 变化:", newVal);
       tableData.value = newVal;
     }
@@ -107,9 +133,16 @@ const updateDocumentDetailData = inject<any>("updateDocumentDetailData");
 // 点击数据列表
 const handleClickTableLine = row => {
   console.log("点击数据列表:", row);
-  updateDocumentDetailData(row);
+  // 现在通过预览来显示，暂时不使用这个逻辑
+  // updateDocumentDetailData(row);
 };
 //#endregion
+
+// 点击预览
+const handlePreviewClick = (row: any) => {
+  // console.log("预览点击:", row);
+  updateDocumentDetailData(row);
+};
 
 //#region 数据删除逻辑
 // 删除点击
@@ -144,13 +177,40 @@ const fetchDeleteMilvus = async (data: any) => {
   }
 };
 //#endregion
+
+//#region 数据下载逻辑
+// 下载点击
+const handleDownloadClick = row => {
+  console.log("下载点击:", row);
+  // 调用下载文件接口
+  fetchDownloadFile(row.source);
+};
+// 下载文件方法
+const fetchDownloadFile = async (objectName: string) => {
+  try {
+    const res: any = await getCommonDownloadUrl(objectName);
+    console.log("下载文件成功", res);
+    // 返回的res.data是url
+    // 模拟a标签
+    const link = document.createElement("a");
+    link.href = res.data;
+    link.download = objectName.split("/").pop();
+    link.click();
+    // 释放内存
+    URL.revokeObjectURL(link.href);
+    // message("下载文件成功", { type: "success" });
+  } catch (error) {
+    message("下载文件失败", { type: "error" });
+  }
+};
+//#endregion
 </script>
 
 <template>
   <el-card shadow="never" body-style="padding: 0;">
     <!-- 表格 -->
     <el-table
-      :data="currentPageData"
+      :data="tableData"
       style="width: 100%; color: #09090b"
       :header-cell-style="{ color: '#09090b' }"
       max-height="740px"
@@ -165,14 +225,14 @@ const fetchDeleteMilvus = async (data: any) => {
           <p class="text-[12px] text-[#71717a]">{{ scope.row.milvusId }}</p>
         </template>
       </el-table-column>
-      <el-table-column prop="reportType" label="类型" width="130">
+      <el-table-column prop="reportType" label="类型" width="200">
         <template #default="scope">
           <el-tag effect="plain" type="info">
             <span class="text-[#09090b]">{{ scope.row.reportType }}</span>
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="productName" label="产品" width="180" />
+      <el-table-column prop="productName" label="产品" width="200" />
       <el-table-column prop="docStatus" label="状态" width="100">
         <template #default="scope">
           <el-tag effect="dark" :type="judgeStatusType(scope.row.docStatus)">
@@ -181,24 +241,51 @@ const fetchDeleteMilvus = async (data: any) => {
         </template>
       </el-table-column>
       <el-table-column prop="reportDate" label="入库时间" width="180" />
-      <el-table-column label="操作" width="130">
+      <el-table-column label="操作" width="300">
         <template #default="scope">
-          <el-button
-            text
-            size="large"
-            style="width: 36px; height: 36px"
-            @click="handleEditClick(scope.row)"
-          >
-            <EpEdit color="#09090b" />
-          </el-button>
-          <el-button
-            text
-            size="large"
-            style="width: 36px; height: 36px"
-            @click="handleDeleteClick(scope.row)"
-          >
-            <EpDelete color="#09090b" />
-          </el-button>
+          <el-tooltip content="预览" placement="top" :show-after="500">
+            <el-button
+              text
+              size="large"
+              style="width: 36px; height: 36px"
+              @click="handlePreviewClick(scope.row)"
+            >
+              <IconParkOutlinePreviewOpen
+                color="#09090b"
+                style="font-size: 16px"
+              />
+            </el-button>
+          </el-tooltip>
+          <el-tooltip content="编辑" placement="top" :show-after="500">
+            <el-button
+              text
+              size="large"
+              style="width: 36px; height: 36px"
+              @click="handleEditClick(scope.row)"
+            >
+              <EpEdit color="#09090b" />
+            </el-button>
+          </el-tooltip>
+          <el-tooltip content="下载" placement="top" :show-after="500">
+            <el-button
+              text
+              size="large"
+              style="width: 36px; height: 36px"
+              @click="handleDownloadClick(scope.row)"
+            >
+              <EpDownload color="#09090b" />
+            </el-button>
+          </el-tooltip>
+          <el-tooltip content="删除" placement="top" :show-after="500">
+            <el-button
+              text
+              size="large"
+              style="width: 36px; height: 36px"
+              @click="handleDeleteClick(scope.row)"
+            >
+              <EpDelete color="#09090b" />
+            </el-button>
+          </el-tooltip>
         </template>
       </el-table-column>
     </el-table>
@@ -210,7 +297,7 @@ const fetchDeleteMilvus = async (data: any) => {
         :page-size="pageSize"
         :page-sizes="[10, 30, 100]"
         layout="total, sizes, prev, pager, next"
-        :total="tableData.length"
+        :total="pageTotal"
         @current-change="handleCurrentChange"
         @size-change="handleSizeChange"
       />

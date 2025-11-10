@@ -31,6 +31,7 @@ const handleFullscreen = () => {
     </div>
     <!-- 右侧内容区 -->
     <div
+      v-if="false"
       :class="[
         'peidi-manage-layout-right',
         { 'w-[25%]': !isFullscreen, 'w-[85%]': isFullscreen }
@@ -64,7 +65,8 @@ const handleFullscreen = () => {
   display: flex;
 
   .peidi-manage-layout-left {
-    width: 70%;
+    // width: 70%; // 暂不展示右侧，左侧内容区占满整个宽度
+    width: 100%;
     height: 100%;
   }
 
