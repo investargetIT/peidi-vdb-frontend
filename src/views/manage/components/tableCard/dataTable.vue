@@ -30,17 +30,17 @@ const props = defineProps({
 const docStatusEnum = inject<any>("docStatusEnum");
 const judgeStatusType = status => {
   switch (status) {
-    case "109":
+    case "有效":
       return "primary";
-    case "111":
+    case "草稿":
       return "info";
-    case "110":
+    case "停用":
       return "danger";
     default:
       return "primary";
   }
 };
-// 用计算属性来判断数据状态的标签
+// 用计算属性来判断数据状态的标签 value改成了中文已经不需要判断id了
 const judgeStatusLabel = computed(() => {
   return id => {
     // console.log("docStatusEnum:", docStatusEnum);
@@ -217,7 +217,7 @@ const fetchDownloadFile = async (objectName: string) => {
       highlight-current-row
       @current-change="handleClickTableLine"
     >
-      <el-table-column prop="title" label="标题">
+      <el-table-column prop="title" label="标题" min-width="400">
         <template #default="scope">
           <p class="text-[14px] text-[#09090b] font-bold">
             {{ scope.row.title }}
@@ -236,7 +236,7 @@ const fetchDownloadFile = async (objectName: string) => {
       <el-table-column prop="docStatus" label="状态" width="100">
         <template #default="scope">
           <el-tag effect="dark" :type="judgeStatusType(scope.row.docStatus)">
-            {{ judgeStatusLabel(scope.row.docStatus) }}
+            {{ scope.row.docStatus }}
           </el-tag>
         </template>
       </el-table-column>

@@ -318,6 +318,8 @@ watch(
         }
         /** ############################################################################################ **/
       }
+      // 调试的时候快速保存用
+      // handleSave();
     }
   },
   { deep: true, immediate: true }
@@ -345,8 +347,8 @@ const calculateVisibility = () => {
   return form.accessControl;
 };
 
-// 处理保存操作
-const handleSave = () => {
+// 处理保存操作 用function定义是为了在上面调用
+function handleSave() {
   // 校验表单数据
   formRef.value?.validate(valid => {
     if (valid) {
@@ -377,7 +379,7 @@ const handleSave = () => {
           spec: form.specification,
           batchNo: form.batchLot,
           lang: form.language,
-          docStatus: form.documentStatus
+          docStatus: form.documentStatus === "" ? "有效" : form.documentStatus // 文档状态 空字符串默认有效
         };
         uploadRef.value.submit();
       } else if (props.formType === "edit") {
@@ -404,7 +406,7 @@ const handleSave = () => {
           spec: form.specification,
           batchNo: form.batchLot,
           lang: form.language,
-          docStatus: form.documentStatus
+          docStatus: form.documentStatus === "" ? "有效" : form.documentStatus // 文档状态 空字符串默认有效
         };
         fetchUpdate();
       }
@@ -419,7 +421,7 @@ const handleSave = () => {
       selectedForm.value = "t-basic";
     }
   });
-};
+}
 // 处理取消操作
 const handleCancel = () => {
   clearForm();
@@ -715,7 +717,7 @@ defineExpose({
                   v-for="item in docStatusEnum"
                   :key="item.id"
                   :label="item.value"
-                  :value="item.id"
+                  :value="item.value"
                 />
               </el-select> </el-form-item
           ></template>
@@ -893,6 +895,10 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+:deep(.el-radio-group) {
+  flex-wrap: nowrap;
+}
+
 :deep(.el-radio-button__inner) {
   padding-right: 51px;
   padding-left: 51px;

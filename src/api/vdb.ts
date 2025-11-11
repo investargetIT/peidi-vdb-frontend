@@ -71,3 +71,8 @@ export const getCommonDownloadUrl = (objectName: string) => {
     }
   });
 };
+
+/** 数据总览 */
+export const getMilvusDashboard = () => {
+  return http.request("get", commonUrlApi("/ai/milvus/dashboard"));
+};

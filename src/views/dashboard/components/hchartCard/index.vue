@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, watch, ref } from "vue";
 import * as Highcharts from "highcharts";
 import "highcharts/highcharts-3d";
 
@@ -29,13 +29,27 @@ const props = defineProps({
 });
 
 const chartId = props.name + new Date().getTime();
+const chartInstance = ref<Highcharts.Chart | null>(null);
 
 onMounted(() => {
   const chartDom = document.getElementById(chartId);
   if (!chartDom) return;
 
-  Highcharts.chart(chartDom, props.option);
+  // 创建图表实例并保存引用
+  chartInstance.value = Highcharts.chart(chartDom, props.option);
 });
+
+// 监听option变化，更新图表
+watch(
+  () => props.option,
+  newOption => {
+    if (chartInstance.value) {
+      // 使用update方法更新图表
+      chartInstance.value.update(newOption, true, true);
+    }
+  },
+  { deep: true }
+);
 </script>
 
 <template>

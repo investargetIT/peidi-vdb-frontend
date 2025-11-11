@@ -55,7 +55,7 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
       <!-- 菜单搜索 -->
       <LaySearch v-show="false" id="header-search" />
       <!-- 国际化 -->
-      <el-dropdown id="header-translation" trigger="click">
+      <el-dropdown v-show="isDevEnv()" id="header-translation" trigger="click">
         <GlobalizationIcon
           class="navbar-bg-hover w-[40px] h-[48px] p-[11px] cursor-pointer outline-hidden"
         />

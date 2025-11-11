@@ -7,16 +7,19 @@ import RiLineChartLine from "~icons/ri/line-chart-line";
 import ChartCard from "@/views/dashboard/components/chartCard/index.vue";
 import dayjs from "dayjs";
 import HChartCard from "@/views/dashboard/components/hchartCard/index.vue";
+import { getCommonEnum, getMilvusDashboard } from "@/api/vdb";
+import { onMounted, ref } from "vue";
+import { message } from "@/utils/message";
 
-const dataCards = [
+const dataCards = ref([
   {
-    title: "向量集合总数",
+    title: "知识库集合总数",
     icon: RiDatabase2Line,
     value: "0",
     text: "+0 相比上月"
   },
   {
-    title: "向量数据总量",
+    title: "知识库数据总量",
     icon: RiFileTextLine,
     value: "0",
     text: "+0 相比上月"
@@ -33,7 +36,7 @@ const dataCards = [
     value: "0",
     text: "+0 相比上月"
   }
-];
+]);
 
 const echartCards = [
   {
@@ -76,7 +79,7 @@ const echartCards = [
   }
 ];
 
-const hchartCard = [
+const hchartCard = ref([
   {
     name: "collectionUsage",
     title: "集合使用情况",
@@ -120,12 +123,12 @@ const hchartCard = [
           type: "pie",
           name: "占用",
           data: [
-            ["集合1", 10],
-            ["集合2", 10],
-            ["集合3", 10],
-            ["集合4", 10],
-            ["集合5", 10],
-            ["集合6", 10]
+            // ["集合1", 10],
+            // ["集合2", 10],
+            // ["集合3", 10],
+            // ["集合4", 10],
+            // ["集合5", 10],
+            // ["集合6", 10]
           ]
         }
       ]
@@ -134,7 +137,50 @@ const hchartCard = [
       width: "100%"
     }
   }
-];
+]);
+
+// 获取数据总览方法
+const fetchMilvusDashboard = () => {
+  getMilvusDashboard()
+    .then((res: any) => {
+      if (res.code === 200) {
+        const usageList = res.data?.usageList || [];
+        const validList = res.data?.validList || [];
+        // 知识库数据总量
+        dataCards.value[1].value =
+          usageList.reduce((pre, cur) => pre + cur.cnt, 0) || 0;
+        //集合使用情况
+        hchartCard.value[0].option.series[0].data = usageList.map(item => [
+          item.field,
+          item.cnt
+        ]);
+      } else {
+        message("获取数据总览失败", { type: "error" });
+      }
+    })
+    .catch(() => {
+      message("获取数据总览失败", { type: "error" });
+    });
+};
+// 请求报告类型
+const fetchReportTypeEnum = () => {
+  getCommonEnum("reportType")
+    .then((res: any) => {
+      if (res?.code === 200) {
+        dataCards.value[0].value = res.data?.length || 0;
+      } else {
+        message("请求报告类型失败", { type: "error" });
+      }
+    })
+    .catch(() => {
+      message("请求报告类型失败", { type: "error" });
+    });
+};
+
+onMounted(() => {
+  fetchMilvusDashboard();
+  fetchReportTypeEnum();
+});
 </script>
 
 <template>
@@ -144,7 +190,7 @@ const hchartCard = [
     <!-- 第一层数据卡片 -->
     <div class="mt-[20px]">
       <el-row :gutter="60">
-        <el-col v-for="card in dataCards" :key="card.title" :span="6">
+        <el-col v-for="card in dataCards" :key="card.title" :xs="24" :span="6">
           <DataCard
             :title="card.title"
             :icon="card.icon"
@@ -158,7 +204,7 @@ const hchartCard = [
     <!-- 第二层图表卡片 -->
     <div class="mt-[20px]">
       <el-row :gutter="60">
-        <el-col :span="12">
+        <el-col :xs="24" :span="12">
           <ChartCard
             v-for="card in echartCards"
             :key="card.name"
@@ -169,7 +215,7 @@ const hchartCard = [
             :style="card?.style"
           />
         </el-col>
-        <el-col :span="12">
+        <el-col :xs="24" :span="12">
           <HChartCard
             v-for="card in hchartCard"
             :key="card.title"

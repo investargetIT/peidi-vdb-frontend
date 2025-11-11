@@ -4,7 +4,8 @@ import { SYSTEM_CONFIG } from "@/constants/system";
 
 const DINGTALK_CORP_ID = SYSTEM_CONFIG.DINGTALK_CORP_ID;
 const NOCESTR = SYSTEM_CONFIG.NOCESTR;
-const AGENT_ID = SYSTEM_CONFIG.AGENT_ID;
+// const AGENT_ID = SYSTEM_CONFIG.AGENT_ID;
+// const APP_ID = SYSTEM_CONFIG.APP_ID;
 
 export const ddAuthFun = () => {
   getJsApi({
@@ -17,7 +18,12 @@ export const ddAuthFun = () => {
     } = res;
     if (sign && timeStamp) {
       dd.config({
-        appId: AGENT_ID, // 必填，微应用ID  agentId不行就用appId，猜测和版本相关
+        // appId: AGENT_ID, // 必填，微应用ID  agentId不行就用appId，猜测和版本相关
+        // appId: APP_ID, // 必填，微应用ID
+
+        // agentId: AGENT_ID, // 必填，微应用ID
+        agentId: "3317230753", // 必填，微应用ID PM项目的
+
         corpId: DINGTALK_CORP_ID, //必填，企业ID
         timeStamp, // 必填，生成签名的时间戳
         nonceStr: NOCESTR, // 必填，自定义固定字符串。

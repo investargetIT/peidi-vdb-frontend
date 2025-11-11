@@ -10,8 +10,8 @@ const props = defineProps({
     type: String,
     required: true
   },
-  dataList: {
-    type: Array,
+  dashboardData: {
+    type: Object,
     required: true
   }
 });
@@ -24,7 +24,7 @@ const props = defineProps({
       {{ props.text }}
     </div>
     <el-divider />
-    <div class="flex items-center">
+    <div class="flex items-center flex-wrap">
       <div class="w-[33%]">
         <div class="text-[14px] text-[#52525B]">创建时间:</div>
         <!-- <div class="text-[14px] text-[#09090B]">2023年10月15日 16:00</div> -->
@@ -33,12 +33,19 @@ const props = defineProps({
       <div class="w-[33%]">
         <div class="text-[14px] text-[#52525B]">更新时间:</div>
         <!-- <div class="text-[14px] text-[#09090B]">2023年11月20日 22:30</div> -->
-        <div class="text-[14px] text-[#09090B]">--</div>
+        <div class="text-[14px] text-[#09090B]">
+          {{ props.dashboardData?.lastUpdateTime || "--" }}
+        </div>
       </div>
       <div class="w-[33%]">
         <div class="text-[14px] text-[#52525B]">数据量:</div>
         <!-- <div class="text-[14px] text-[#09090B]">156 条</div> -->
-        <div class="text-[14px] text-[#09090B]">--</div>
+        <div class="text-[14px] text-[#09090B]">
+          {{
+            Number(props.dashboardData?.totalDataCount || 0).toLocaleString() ||
+            "--"
+          }}
+        </div>
       </div>
     </div>
   </el-card>

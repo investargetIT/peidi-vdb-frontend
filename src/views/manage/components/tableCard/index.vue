@@ -16,6 +16,10 @@ const props = defineProps({
   tableLoading: {
     type: Boolean,
     default: false
+  },
+  dashboardData: {
+    type: Object,
+    required: true
   }
 });
 
@@ -25,7 +29,7 @@ const dataBlocks = computed(() => {
   return [
     {
       title: "总数据量",
-      value: Number(0).toLocaleString(),
+      value: Number(props.dashboardData?.totalDataCount || 0).toLocaleString(),
       color: "#155dfc"
     },
     {
@@ -35,13 +39,13 @@ const dataBlocks = computed(() => {
     },
     {
       title: "有效数据",
-      value: Number(0).toLocaleString(),
+      value: Number(props.dashboardData?.validDataCount || 0).toLocaleString(),
       color: "#9810fa"
     },
     {
       title: "最后更新",
       // value: "2023年11月20日",
-      value: "--",
+      value: props.dashboardData?.lastUpdateTime || "--",
       color: "#f54900"
     }
   ];
@@ -117,21 +121,23 @@ const handleAddDataClick = () => {
     <!-- 数据概览 -->
     <div>
       <div class="text-[18px] font-bold text-[#09090B]">A1-数据概览</div>
-      <div class="flex items-center justify-between mt-[20px]">
+      <div class="flex items-center justify-between flex-wrap mt-[20px]">
         <DataBlock
           v-for="block in dataBlocks"
           :key="block.title"
           :title="block.title"
           :value="block.value"
           :color="block.color"
-          :style="{ width: '20%' }"
+          :style="{ width: '20%', minWidth: '200px' }"
         />
       </div>
       <!-- 数据列表 -->
       <div class="mt-[30px]">
         <!-- 数据列表-标题&搜索框&添加数据 -->
         <div class="flex items-center justify-between mb-[20px]">
-          <div class="text-[18px] font-bold text-[#09090B]">A2-数据列表</div>
+          <div class="text-[18px] font-bold text-[#09090B] min-w-[150px]">
+            A2-数据列表
+          </div>
           <div class="flex items-center">
             <div class="w-[250px] mr-[10px]">
               <el-input

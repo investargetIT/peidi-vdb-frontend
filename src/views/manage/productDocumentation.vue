@@ -4,13 +4,55 @@ import TitleCard from "@/views/manage/components/titleCard/index.vue";
 import TableCard from "@/views/manage/components/tableCard/index.vue";
 import DocumentDetail from "@/views/manage/components/documentDetail/index.vue";
 import DataDialog from "@/views/manage/components/dataDialog/index.vue";
-import { onMounted, provide, ref, watch } from "vue";
+import { computed, onMounted, provide, ref, watch } from "vue";
 import type { DialogType } from "@/views/manage/components/dataDialog/index.vue";
 import LinkDetail from "@/views/manage/components/linkDetail/index.vue";
-import { getMilvusPage, getCommonEnum } from "@/api/vdb";
+import { getMilvusPage, getCommonEnum, getMilvusDashboard } from "@/api/vdb";
 import { message } from "@/utils/message";
 import { useRoute } from "vue-router";
 import DocumentDetailDialog from "@/views/manage/components/documentDetailDialog/index.vue";
+import dayjs from "dayjs";
+
+//#region 数据概览逻辑
+const usageList = ref<any[]>([]);
+const validList = ref<any[]>([]);
+// 计算属性 -来获得数据概览需要的所有数据
+const dashboardData = computed(() => {
+  // 当前文档类型
+  const currentDocType = handleTitleCardTitle().title;
+  // 总数据量
+  const totalDataCount =
+    usageList.value.find((item: any) => item.field === currentDocType)?.cnt ||
+    0;
+  // 有效数据量
+  const validDataCount =
+    validList.value.find((item: any) => item.field === currentDocType)?.cnt ||
+    0;
+  // 最后更新时间 默认为今天
+  const lastUpdateTime = dayjs().format("YYYY-MM-DD");
+
+  return {
+    totalDataCount,
+    validDataCount,
+    lastUpdateTime
+  };
+});
+// 获取数据总览方法
+const fetchMilvusDashboard = () => {
+  getMilvusDashboard()
+    .then((res: any) => {
+      if (res.code === 200) {
+        usageList.value = res.data?.usageList || [];
+        validList.value = res.data?.validList || [];
+      } else {
+        message("获取数据总览失败", { type: "error" });
+      }
+    })
+    .catch(() => {
+      message("获取数据总览失败", { type: "error" });
+    });
+};
+//#endregion
 
 //#region 请求数据状态枚举
 const docStatusEnum = ref<any[]>([]);
@@ -164,6 +206,9 @@ const handleReportType = () => {
 };
 
 const fetchMilvusPage = () => {
+  // 把请求数据总览方法放到这里，因为修改数据状态后表格和总览数据会变化
+  fetchMilvusDashboard();
+
   tableLoading.value = true;
 
   // 目前三个路由界面风格统一，所以根据地址判断文档类型参数
@@ -280,11 +325,15 @@ onMounted(async () => {
         <TitleCard
           :title="handleTitleCardTitle().title"
           :text="handleTitleCardTitle().subTitle"
-          :dataList="milvusPageList"
+          :dashboardData="dashboardData"
         />
         <!-- 数据列表卡片 -->
         <div class="mt-[25px]" />
-        <TableCard :tableData="milvusPageList" :tableLoading="tableLoading" />
+        <TableCard
+          :tableData="milvusPageList"
+          :tableLoading="tableLoading"
+          :dashboardData="dashboardData"
+        />
       </template>
       <!-- 暂不展示右侧内容区 -->
       <template #right>

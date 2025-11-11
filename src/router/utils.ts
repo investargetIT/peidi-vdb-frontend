@@ -229,7 +229,7 @@ function initRouter() {
                 component: Layout,
                 meta: {
                   icon: "ri/folder-5-line",
-                  title: "向量数据库管理",
+                  title: "知识库管理",
                   showLink: true,
                   rank: 10
                 },
