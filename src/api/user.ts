@@ -70,6 +70,13 @@ export const registerMobile = data => {
   });
 };
 
+// 获取jsapi的签名
+export const getJsApi = params => {
+  return http.request("get", commonUrlApi("/ding/jsapi"), {
+    params
+  });
+};
+
 /** 刷新`token` */
 export const refreshTokenApi = (data?: object) => {
   return http.request<RefreshTokenResult>("post", "/refresh-token", { data });

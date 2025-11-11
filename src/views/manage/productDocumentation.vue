@@ -260,14 +260,15 @@ onMounted(async () => {
   await fetchDocStatusEnum();
   await fetchMilvusPage();
 
-  // 主动初始化DocumentDetailDialog组件
-  documentDetailDialogRef.value?.showDocumentDetailDialog();
-  // 立即关闭，只为了初始化
-  setTimeout(() => {
-    // 这里需要访问dialogVisible并设置为false
-    // 或者组件内部应该有close方法
-    documentDetailDialogRef.value?.closeDocumentDetailDialog();
-  }, 0);
+  // FIXME: 效果不好
+  // // 主动初始化DocumentDetailDialog组件
+  // documentDetailDialogRef.value?.showDocumentDetailDialog();
+  // // 立即关闭，只为了初始化
+  // setTimeout(() => {
+  //   // 这里需要访问dialogVisible并设置为false
+  //   // 或者组件内部应该有close方法
+  //   documentDetailDialogRef.value?.closeDocumentDetailDialog();
+  // }, 0);
 });
 </script>
 

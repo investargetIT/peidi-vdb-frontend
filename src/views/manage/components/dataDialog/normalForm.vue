@@ -16,18 +16,17 @@ import { message } from "@/utils/message";
 import * as dd from "dingtalk-jsapi";
 import { SYSTEM_CONFIG } from "@/constants";
 import { formatToken, getToken } from "@/utils/auth";
+import { ddAuthFun } from "@/views/manage/utils/ddAuth";
 
 const props = defineProps({
   // 保存回调函数
   saveCallback: {
     type: Function as PropType<(data: FormData) => void>,
-    default: () => {},
     required: true
   },
   // 取消回调函数
   cancelCallback: {
     type: Function as PropType<() => void>,
-    default: () => {},
     required: true
   },
   // 表单数据
@@ -39,7 +38,6 @@ const props = defineProps({
   // 表单类型 添加和编辑上传文件样式不同
   formType: {
     type: String as PropType<"add" | "edit">,
-    default: "add",
     required: true
   }
 });
@@ -292,6 +290,7 @@ watch(
         /** ############################################################################################ **/
         // 手动赋值
         const metedate = JSON.parse(newVal.metedate || "{}"); // 解析metedate字段，默认值为空对象
+        form.accessControlUsers = metedate.accessControlUsers || ""; // 访问控制用户
         form.documentPath = metedate.documentPath || "";
         form.documentDescription = metedate.documentDescription || "";
         form.documentTitle = newVal.title || ""; // 文档标题
@@ -335,6 +334,8 @@ const clearForm = () => {
   uploadRequest.value = {};
   // 清空勾选访问控制
   isAccessControlAllSelected.value = false;
+  // 回到基本信息表单
+  selectedForm.value = "t-basic";
 };
 
 // visibility 的逻辑计算处理
@@ -358,7 +359,8 @@ const handleSave = () => {
         uploadRequest.value = {
           metedate: JSON.stringify({
             documentPath: form.documentPath,
-            documentDescription: form.documentDescription
+            documentDescription: form.documentDescription,
+            accessControlUsers: form.accessControlUsers
           }),
           visibility: calculateVisibility(),
           title: form.documentTitle,
@@ -384,7 +386,8 @@ const handleSave = () => {
           ...props.formData,
           metedate: JSON.stringify({
             documentPath: form.documentPath,
-            documentDescription: form.documentDescription
+            documentDescription: form.documentDescription,
+            accessControlUsers: form.accessControlUsers
           }),
           visibility: calculateVisibility(),
           title: form.documentTitle,
@@ -451,6 +454,7 @@ const hanldeAccessControlAllSelected = val => {
   } else {
     form.accessControl = "";
   }
+  form.accessControlUsers = "";
   // console.log(
   //   "form.accessControl",
   //   form.accessControl,
@@ -479,14 +483,15 @@ const handleAddAccessControl = () => {
   }
   // 在钉钉环境下调用钉钉工具
   try {
-    dd.biz.contact.choose({
-      multiple: true, //是否多选：true多选 false单选； 默认true
-      users: form.accessControl, //默认选中的用户列表，员工userid；成功回调中应包含该信息
-      corpId: SYSTEM_CONFIG.DINGTALK_CORP_ID, //企业id
-      max: 1500, //人数限制，当multiple为true才生效，可选范围1-1500
-      onSuccess: function (data) {
-        console.log("data", data);
-        /*
+    dd.ready(() => {
+      dd.biz.contact.choose({
+        multiple: true, //是否多选：true多选 false单选； 默认true
+        users: form.accessControl.split(","), //默认选中的用户列表，员工userid；成功回调中应包含该信息
+        corpId: SYSTEM_CONFIG.DINGTALK_CORP_ID, //企业id
+        max: 1500, //人数限制，当multiple为true才生效，可选范围1-1500
+        onSuccess: function (data) {
+          console.log("data", data);
+          /*
           data结构
           [
             {
@@ -496,19 +501,20 @@ const handleAddAccessControl = () => {
             }
           ];
         */
-        // 处理选择的用户，将emplId拼接为逗号分隔的字符串
-        if (data.length > 0) {
-          form.accessControl = data.map(item => item.emplId).join(",");
-          form.accessControlUsers = data.map(item => item.name).join(",");
+          // 处理选择的用户，将emplId拼接为逗号分隔的字符串
+          if (data.length > 0) {
+            form.accessControl = data.map(item => item.emplId).join(",");
+            form.accessControlUsers = data.map(item => item.name).join(",");
+          }
+          // alert("dd successs: " + JSON.stringify(data));
+        },
+        onFail: function (err) {
+          // alert("添加访问控制失败: " + err);
         }
-        // alert("dd successs: " + JSON.stringify(data));
-      },
-      onFail: function (err) {
-        alert("添加访问控制失败: " + err);
-      }
+      });
     });
   } catch (error) {
-    alert("添加访问控制失败: " + error);
+    // alert("添加访问控制失败: " + error);
   }
 };
 //#endregion
@@ -523,6 +529,13 @@ const ellipsisFileName = (fileName: string, maxLength: number = 10) => {
   }
   return fileName.substring(0, maxLength) + "...";
 };
+
+onMounted(() => {
+  // 初始化钉钉权限
+  if (navigator.userAgent.includes("DingTalk")) {
+    ddAuthFun();
+  }
+});
 
 defineExpose({
   clearForm
