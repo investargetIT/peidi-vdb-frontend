@@ -167,9 +167,7 @@ const formRules = reactive<FormRules<FormData>>({
     }
   ],
   reportType: [{ required: true, message: "请选择文档类型", trigger: "blur" }],
-  documentPath: [
-    { required: false, message: "请输入文档路径", trigger: "blur" }
-  ]
+  documentPath: [{ required: true, message: "请上传文档", trigger: "blur" }]
 });
 
 // 表单访问控制是否全选

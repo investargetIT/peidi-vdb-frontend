@@ -15,6 +15,7 @@ import Setting from "~icons/ri/settings-3-line";
 import Check from "~icons/ep/check";
 import RiFormatClear from "~icons/ri/format-clear";
 import { isDevEnv } from "@/utils/debug";
+import { emitter } from "@/utils/mitt";
 
 const { onReset } = useDataThemeChange();
 
@@ -33,6 +34,10 @@ const {
 } = useNav();
 
 const { t, locale, translationCh, translationEn } = useTranslationLang();
+
+emitter.on("logout", () => {
+  logout();
+});
 </script>
 
 <template>
