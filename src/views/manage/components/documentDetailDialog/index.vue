@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import Markdown from "@/views/manage/components/markdown/index.vue";
-import { MARKDOWN_EXAMPLE } from "@/views/debug/markdown/data/markdown";
 import { computed, reactive, ref, watch } from "vue";
-import { message } from "@/utils/message";
+import Markdown from "@/views/manage/components/markdown/index.vue";
 
 // props
 const props = defineProps({
@@ -11,6 +9,14 @@ const props = defineProps({
     required: true
   }
 });
+
+const dialogVisible = ref(false);
+const showDocumentDetailDialog = () => {
+  dialogVisible.value = true;
+};
+const closeDocumentDetailDialog = () => {
+  dialogVisible.value = false;
+};
 
 //#region 源数据处理逻辑
 // 当前选中文件页数
@@ -83,49 +89,19 @@ const currentMarkdown = computed(() => {
 });
 //#endregion
 
-// 分页切换
-const handlePageChange = (page: number) => {
-  fileSelected.value = page - 1;
-};
+// 暴露方法
+defineExpose({
+  showDocumentDetailDialog,
+  closeDocumentDetailDialog
+});
 </script>
 
 <template>
-  <div>
+  <el-dialog v-model="dialogVisible" fullscreen append-to-body>
     <div class="text-[18px] font-bold text-[#09090b]">文件详情</div>
-    <div
-      v-if="fileSelected === -1"
-      class="text-[14px] text-[#71717a] font-bold"
-    >
-      未选中文件（点击数据列表，查看文件详情）
+    <div class="text-[14px] text-[#71717a] font-bold mb-[10px]">
+      {{ fileData.title }}
     </div>
-    <div v-show="fileSelected > -1">
-      <div class="text-[14px] text-[#71717a] font-bold">
-        {{ fileData.title }}
-      </div>
-      <div v-show="false" class="flex items-center">
-        <div class="text-[14px] text-[#71717a] font-bold mr-[10px]">页码:</div>
-        <el-radio-group v-model="fileSelected" class="mt-[20px] mb-[20px]">
-          <el-radio-button
-            v-for="(item, index) in fileData.markdownList"
-            :key="index"
-            :label="index + 1"
-            :value="index"
-          />
-        </el-radio-group>
-      </div>
-      <!--  TODO: 页码过多所以采用新组件 -->
-      <div v-show="false" class="mt-[15px] mb-[15px]">
-        <el-pagination
-          background
-          layout="prev, pager, next"
-          :total="fileData.markdownList.length"
-          :default-page-size="1"
-          @change="handlePageChange"
-        />
-      </div>
-      <!-- <el-divider /> -->
-      <!-- 更新后重新渲染节点 -->
-      <Markdown :height="750" :data="currentMarkdown" />
-    </div>
-  </div>
+    <Markdown :height="800" :data="currentMarkdown" />
+  </el-dialog>
 </template>

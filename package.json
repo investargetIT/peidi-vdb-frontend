@@ -58,7 +58,7 @@
     "axios": "^1.11.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
-    "dingtalk-jsapi": "^3.2.0",
+    "dingtalk-jsapi": "^3.0.41",
     "echarts": "^5.6.0",
     "element-plus": "^2.10.4",
     "highcharts": "^12.4.0",

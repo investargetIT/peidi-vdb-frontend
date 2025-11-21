@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, reactive, ref, watch } from "vue";
+import { computed, inject, onMounted, reactive, ref, watch } from "vue";
 import RowCol from "@/views/manage/components/dataDialog/rowCol.vue";
 import {
   FormInstance,
@@ -16,18 +16,17 @@ import { message } from "@/utils/message";
 import * as dd from "dingtalk-jsapi";
 import { SYSTEM_CONFIG } from "@/constants";
 import { formatToken, getToken } from "@/utils/auth";
+import { ddAuthFun } from "@/views/manage/utils/ddAuth";
 
 const props = defineProps({
   // 保存回调函数
   saveCallback: {
     type: Function as PropType<(data: FormData) => void>,
-    default: () => {},
     required: true
   },
   // 取消回调函数
   cancelCallback: {
     type: Function as PropType<() => void>,
-    default: () => {},
     required: true
   },
   // 表单数据
@@ -39,7 +38,6 @@ const props = defineProps({
   // 表单类型 添加和编辑上传文件样式不同
   formType: {
     type: String as PropType<"add" | "edit">,
-    default: "add",
     required: true
   }
 });
@@ -170,7 +168,18 @@ const formRules = reactive<FormRules<FormData>>({
   ],
   reportType: [{ required: true, message: "请选择文档类型", trigger: "blur" }],
   documentPath: [
-    { required: false, message: "请输入文档路径", trigger: "blur" }
+    // { required: true, message: "请上传文档", trigger: "blur" }
+    {
+      required: true,
+      validator: (rule, value, callback) => {
+        if (props.formType === "add" && !value) {
+          callback(new Error("请上传文档"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "change"
+    }
   ]
 });
 
@@ -292,6 +301,7 @@ watch(
         /** ############################################################################################ **/
         // 手动赋值
         const metedate = JSON.parse(newVal.metedate || "{}"); // 解析metedate字段，默认值为空对象
+        form.accessControlUsers = metedate.accessControlUsers || ""; // 访问控制用户
         form.documentPath = metedate.documentPath || "";
         form.documentDescription = metedate.documentDescription || "";
         form.documentTitle = newVal.title || ""; // 文档标题
@@ -319,6 +329,8 @@ watch(
         }
         /** ############################################################################################ **/
       }
+      // 调试的时候快速保存用
+      // handleSave();
     }
   },
   { deep: true, immediate: true }
@@ -333,17 +345,21 @@ const clearForm = () => {
   uploadFileList.value = [];
   // 清空上传请求数据
   uploadRequest.value = {};
+  // 清空勾选访问控制
+  isAccessControlAllSelected.value = false;
+  // 回到基本信息表单
+  selectedForm.value = "t-basic";
 };
 
 // visibility 的逻辑计算处理
 const calculateVisibility = () => {
-  if (isAccessControlAllSelected) return "all";
+  if (isAccessControlAllSelected.value) return "all";
   if (form.accessControl === "") return "all";
   return form.accessControl;
 };
 
-// 处理保存操作
-const handleSave = () => {
+// 处理保存操作 用function定义是为了在上面调用
+function handleSave() {
   // 校验表单数据
   formRef.value?.validate(valid => {
     if (valid) {
@@ -356,7 +372,8 @@ const handleSave = () => {
         uploadRequest.value = {
           metedate: JSON.stringify({
             documentPath: form.documentPath,
-            documentDescription: form.documentDescription
+            documentDescription: form.documentDescription,
+            accessControlUsers: form.accessControlUsers
           }),
           visibility: calculateVisibility(),
           title: form.documentTitle,
@@ -373,7 +390,7 @@ const handleSave = () => {
           spec: form.specification,
           batchNo: form.batchLot,
           lang: form.language,
-          docStatus: form.documentStatus
+          docStatus: form.documentStatus === "" ? "有效" : form.documentStatus // 文档状态 空字符串默认有效
         };
         uploadRef.value.submit();
       } else if (props.formType === "edit") {
@@ -382,7 +399,8 @@ const handleSave = () => {
           ...props.formData,
           metedate: JSON.stringify({
             documentPath: form.documentPath,
-            documentDescription: form.documentDescription
+            documentDescription: form.documentDescription,
+            accessControlUsers: form.accessControlUsers
           }),
           visibility: calculateVisibility(),
           title: form.documentTitle,
@@ -399,7 +417,7 @@ const handleSave = () => {
           spec: form.specification,
           batchNo: form.batchLot,
           lang: form.language,
-          docStatus: form.documentStatus
+          docStatus: form.documentStatus === "" ? "有效" : form.documentStatus // 文档状态 空字符串默认有效
         };
         fetchUpdate();
       }
@@ -414,7 +432,7 @@ const handleSave = () => {
       selectedForm.value = "t-basic";
     }
   });
-};
+}
 // 处理取消操作
 const handleCancel = () => {
   clearForm();
@@ -449,6 +467,7 @@ const hanldeAccessControlAllSelected = val => {
   } else {
     form.accessControl = "";
   }
+  form.accessControlUsers = "";
   // console.log(
   //   "form.accessControl",
   //   form.accessControl,
@@ -477,14 +496,15 @@ const handleAddAccessControl = () => {
   }
   // 在钉钉环境下调用钉钉工具
   try {
-    dd.biz.contact.choose({
-      multiple: true, //是否多选：true多选 false单选； 默认true
-      users: form.accessControl, //默认选中的用户列表，员工userid；成功回调中应包含该信息
-      corpId: SYSTEM_CONFIG.DINGTALK_CORP_ID, //企业id
-      max: 1500, //人数限制，当multiple为true才生效，可选范围1-1500
-      onSuccess: function (data) {
-        console.log("data", data);
-        /*
+    dd.ready(() => {
+      dd.biz.contact.choose({
+        multiple: true, //是否多选：true多选 false单选； 默认true
+        users: form.accessControl.split(","), //默认选中的用户列表，员工userid；成功回调中应包含该信息
+        corpId: SYSTEM_CONFIG.DINGTALK_CORP_ID, //企业id
+        max: 1500, //人数限制，当multiple为true才生效，可选范围1-1500
+        onSuccess: function (data) {
+          console.log("data", data);
+          /*
           data结构
           [
             {
@@ -494,22 +514,41 @@ const handleAddAccessControl = () => {
             }
           ];
         */
-        // 处理选择的用户，将emplId拼接为逗号分隔的字符串
-        if (data.length > 0) {
-          form.accessControl = data.map(item => item.emplId).join(",");
-          form.accessControlUsers = data.map(item => item.name).join(",");
+          // 处理选择的用户，将emplId拼接为逗号分隔的字符串
+          if (data.length > 0) {
+            form.accessControl = data.map(item => item.emplId).join(",");
+            form.accessControlUsers = data.map(item => item.name).join(",");
+          }
+          // alert("dd successs: " + JSON.stringify(data));
+        },
+        onFail: function (err) {
+          // alert("添加访问控制失败: " + err);
         }
-        // alert("dd successs: " + JSON.stringify(data));
-      },
-      onFail: function (err) {
-        alert("添加访问控制失败: " + err);
-      }
+      });
     });
   } catch (error) {
-    alert("添加访问控制失败: " + error);
+    // alert("添加访问控制失败: " + error);
   }
 };
 //#endregion
+
+// 文件名省略方法
+const ellipsisFileName = (fileName: string, maxLength: number = 10) => {
+  if (!fileName) {
+    return "";
+  }
+  if (fileName.length <= maxLength) {
+    return fileName;
+  }
+  return fileName.substring(0, maxLength) + "...";
+};
+
+onMounted(() => {
+  // 初始化钉钉权限
+  if (navigator.userAgent.includes("DingTalk")) {
+    ddAuthFun();
+  }
+});
 
 defineExpose({
   clearForm
@@ -596,7 +635,7 @@ defineExpose({
                   }"
                   :limit="1"
                   :auto-upload="false"
-                  accept=".pdf,.docx"
+                  accept=".pdf,.docx,.doc,.xlsx,.xls"
                   :on-success="handleUploadSuccess"
                   :on-change="handleUploadChange"
                   :on-error="handleUploadError"
@@ -618,8 +657,8 @@ defineExpose({
                 <el-alert
                   :title="
                     props.formType === 'add'
-                      ? uploadFileList[0]?.name
-                      : form.documentPath
+                      ? ellipsisFileName(uploadFileList[0]?.name)
+                      : ellipsisFileName(form.documentPath)
                   "
                   type="info"
                   :closable="props.formType === 'add'"
@@ -635,7 +674,9 @@ defineExpose({
                 </el-alert>
               </div>
 
-              <div class="text-[12px] text-[#71717a]">支持 PDF, DOCX 格式</div>
+              <div class="text-[12px] text-[#71717a]">
+                支持 PDF, DOCX, DOC, XLSX, XLS 格式
+              </div>
             </el-form-item>
           </template>
         </RowCol>
@@ -687,7 +728,7 @@ defineExpose({
                   v-for="item in docStatusEnum"
                   :key="item.id"
                   :label="item.value"
-                  :value="item.id"
+                  :value="item.value"
                 />
               </el-select> </el-form-item
           ></template>
@@ -865,6 +906,10 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+:deep(.el-radio-group) {
+  flex-wrap: nowrap;
+}
+
 :deep(.el-radio-button__inner) {
   padding-right: 51px;
   padding-left: 51px;

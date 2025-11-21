@@ -12,7 +12,8 @@ import type {
 import { stringify } from "qs";
 import NProgress from "../progress";
 import { getToken, formatToken } from "@/utils/auth";
-import { useUserStoreHook } from "@/store/modules/user";
+// import { useUserStoreHook } from "@/store/modules/user";
+import { emitter } from "@/utils/mitt";
 
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
@@ -127,6 +128,11 @@ class PureHttp {
         const $config = response.config;
         // 关闭进度条动画
         NProgress.done();
+        if (response?.data?.code === 100100012) {
+          emitter.emit("logout");
+          // alert("登录过期，请重新登录");
+          return response.data;
+        }
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof $config.beforeResponseCallback === "function") {
           $config.beforeResponseCallback(response);

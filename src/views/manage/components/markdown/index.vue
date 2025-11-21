@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { MARKDOWN_EXAMPLE } from "@/views/debug/markdown/data/markdown";
 import Vditor from "vditor";
 import "vditor/dist/index.css";
@@ -17,10 +17,15 @@ const props = defineProps({
 });
 
 // loading状态
-const loading = ref(true);
+const loading = ref(false);
 
 const vditor = ref();
 function initVditor() {
+  // #pridi-manage-markdown-vditor 不存在时，不初始化
+  // if (!document.getElementById("pridi-manage-markdown-vditor")) {
+  //   return;
+  // }
+
   loading.value = true;
   vditor.value = new Vditor("pridi-manage-markdown-vditor", {
     mode: "sv",
@@ -51,11 +56,20 @@ function initVditor() {
 //   initVditor();
 // });
 
+onBeforeUnmount(() => {
+  if (vditor.value) {
+    vditor.value.destroy();
+  }
+});
+
 watch(
   () => props.data,
   (newVal, oldVal) => {
     if (newVal !== oldVal && newVal) {
-      initVditor();
+      // 等待dom更新完成后初始化vditor，否则会导致获取不到dom元素
+      nextTick(() => {
+        initVditor();
+      });
     }
   },
   { deep: true, immediate: true }
@@ -65,9 +79,16 @@ watch(
 <template>
   <div
     v-loading="loading"
+    element-loading-text="首次加载比较慢，请稍后"
     class="peidi-manage-markdown"
     :style="{ height: height + 'px' }"
   >
     <div v-show="!loading" id="pridi-manage-markdown-vditor" />
   </div>
 </template>
+
+<style lang="scss" scoped>
+:deep(.vditor-reset) {
+  max-width: 100% !important; // 这里important是为了覆盖vditor的样式
+}
+</style>

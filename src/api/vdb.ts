@@ -1,3 +1,4 @@
+import { formatToken, getToken } from "@/utils/auth";
 import { http } from "@/utils/http";
 
 export const commonUrlApi = (url: string) =>
@@ -11,6 +12,13 @@ export const getCommonEnum = (type: "docStatus" | "reportType") => {
     params: {
       type
     }
+  });
+};
+
+/** 设置枚举 */
+export const postCommonEnum = (data: any) => {
+  return http.request("post", commonUrlApi("/ai/common/enum"), {
+    data
   });
 };
 
@@ -43,4 +51,28 @@ export const postMilvusDelete = (data: Record<string, any>) => {
   return http.request("post", commonUrlApi("/ai/milvus/delete"), {
     data
   });
+};
+
+/** 下载文件 */
+export const getCommonDownload = (objectName: string) => {
+  return http.request("get", commonUrlApi("/ai/common/download"), {
+    params: {
+      authorization: formatToken(getToken().accessToken),
+      objectName
+    }
+  });
+};
+
+/** 获取文件url */
+export const getCommonDownloadUrl = (objectName: string) => {
+  return http.request("get", commonUrlApi("/ai/common/download-url"), {
+    params: {
+      objectName
+    }
+  });
+};
+
+/** 数据总览 */
+export const getMilvusDashboard = () => {
+  return http.request("get", commonUrlApi("/ai/milvus/dashboard"));
 };

@@ -15,6 +15,7 @@ import Setting from "~icons/ri/settings-3-line";
 import Check from "~icons/ep/check";
 import RiFormatClear from "~icons/ri/format-clear";
 import { isDevEnv } from "@/utils/debug";
+import { emitter } from "@/utils/mitt";
 
 const { onReset } = useDataThemeChange();
 
@@ -33,6 +34,10 @@ const {
 } = useNav();
 
 const { t, locale, translationCh, translationEn } = useTranslationLang();
+
+emitter.on("logout", () => {
+  logout();
+});
 </script>
 
 <template>
@@ -55,7 +60,7 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
       <!-- 菜单搜索 -->
       <LaySearch v-show="false" id="header-search" />
       <!-- 国际化 -->
-      <el-dropdown id="header-translation" trigger="click">
+      <el-dropdown v-show="isDevEnv()" id="header-translation" trigger="click">
         <GlobalizationIcon
           class="navbar-bg-hover w-[40px] h-[48px] p-[11px] cursor-pointer outline-hidden"
         />

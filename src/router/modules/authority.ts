@@ -12,7 +12,7 @@ export default [
       icon: "ri/user-settings-line",
       title: $t("pd.menus.userManage"),
       showLink: isDevEnv(),
-      rank: 100
+      rank: 101
     },
     children: [
       {
