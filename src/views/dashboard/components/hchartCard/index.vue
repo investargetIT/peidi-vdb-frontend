@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch, ref } from "vue";
+import { onMounted, watch, ref, onUnmounted } from "vue";
 import * as Highcharts from "highcharts";
 import "highcharts/highcharts-3d";
 
@@ -37,6 +37,13 @@ onMounted(() => {
 
   // 创建图表实例并保存引用
   chartInstance.value = Highcharts.chart(chartDom, props.option);
+
+  onUnmounted(() => {
+    if (chartInstance.value) {
+      chartInstance.value.destroy();
+      chartInstance.value = null;
+    }
+  });
 });
 
 // 监听option变化，更新图表

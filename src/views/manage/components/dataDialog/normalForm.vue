@@ -167,7 +167,20 @@ const formRules = reactive<FormRules<FormData>>({
     }
   ],
   reportType: [{ required: true, message: "请选择文档类型", trigger: "blur" }],
-  documentPath: [{ required: true, message: "请上传文档", trigger: "blur" }]
+  documentPath: [
+    // { required: true, message: "请上传文档", trigger: "blur" }
+    {
+      required: true,
+      validator: (rule, value, callback) => {
+        if (props.formType === "add" && !value) {
+          callback(new Error("请上传文档"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "change"
+    }
+  ]
 });
 
 // 表单访问控制是否全选

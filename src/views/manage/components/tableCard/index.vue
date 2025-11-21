@@ -86,23 +86,38 @@ const dataSearch = ref("");
 //     item.title.toLowerCase().includes(dataSearch.value.toLowerCase())
 //   );
 // });
+const updateSearchParams = _.debounce((keyword: string) => {
+  pageParamsGettersSetters?.setPageParams({
+    searchStr:
+      keyword === ""
+        ? []
+        : [
+            {
+              searchName: "title",
+              searchType: "like",
+              searchValue: `${keyword}`
+            }
+          ]
+  });
+}, 1000);
 watch(dataSearch, (newVal, oldVal) => {
   if (newVal !== oldVal) {
-    console.log("dataSearch.value", dataSearch.value);
-    _.debounce(() => {
-      pageParamsGettersSetters.setPageParams({
-        searchStr:
-          newVal === ""
-            ? []
-            : [
-                {
-                  searchName: "title",
-                  searchType: "like",
-                  searchValue: `${newVal}`
-                }
-              ]
-      });
-    }, 1000)();
+    // console.log("dataSearch.value", dataSearch.value);
+    // _.debounce(() => {
+    //   pageParamsGettersSetters.setPageParams({
+    //     searchStr:
+    //       newVal === ""
+    //         ? []
+    //         : [
+    //             {
+    //               searchName: "title",
+    //               searchType: "like",
+    //               searchValue: `${newVal}`
+    //             }
+    //           ]
+    //   });
+    // }, 1000)();
+    updateSearchParams(newVal);
   }
 });
 //#endregion
