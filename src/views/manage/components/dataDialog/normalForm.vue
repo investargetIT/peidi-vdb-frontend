@@ -225,6 +225,11 @@ watch(
       } else {
         form.documentType = "";
       }
+
+      // 如果是添加模式，并且文档标题还是空的，那默认文档标题为文件名
+      if (props.formType === "add" && !form.documentTitle) {
+        form.documentTitle = newVal[0]?.name?.split(".")?.[0] || "";
+      }
     }
   },
   { deep: true, immediate: true }
@@ -275,6 +280,7 @@ const handleUploadChange = (file: any) => {
 //#endregion
 
 // 监听formData变化，如果newVal不为空，则在newVal中遍历出form对象里存在的字段，赋值给form
+// 这个监听在add 和 edit 模式下都生效
 watch(
   () => props.formData,
   (newVal, oldVal) => {
@@ -331,6 +337,13 @@ watch(
       }
       // 调试的时候快速保存用
       // handleSave();
+    }
+
+    // add 模式下，默认文档状态为有效，批次为1
+    if (props.formType === "add") {
+      console.log("add 模式下，默认文档状态为有效，批次为1");
+      form.documentStatus = "有效";
+      form.batchLot = "1";
     }
   },
   { deep: true, immediate: true }
