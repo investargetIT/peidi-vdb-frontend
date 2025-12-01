@@ -448,6 +448,25 @@ function handleSave() {
 }
 // 处理取消操作
 const handleCancel = () => {
+  // message("确认要取消操作吗？", { type: "warning" });
+
+  if (props.formType === "add") {
+    // 中断正在进行的上传请求
+    if (
+      uploadLoading.value &&
+      uploadRef.value &&
+      uploadFileList.value.length > 0
+    ) {
+      // 获取当前正在上传的文件
+      const currentFile = uploadFileList.value[0];
+      uploadRef.value.abort(currentFile); // 中断上传请求，传入文件参数
+      message("已中断上传操作", { type: "info" });
+    }
+
+    // 重置上传状态
+    uploadLoading.value = false;
+  }
+
   clearForm();
   // 执行取消回调函数
   props.cancelCallback();
@@ -564,7 +583,8 @@ onMounted(() => {
 });
 
 defineExpose({
-  clearForm
+  clearForm,
+  handleCancel
 });
 </script>
 

@@ -34,7 +34,7 @@ const normalFormRef = ref();
 const handleBeforeClose = () => {
   // console.log("数据详情弹窗关闭前事件触发");
   // 为了解决点击x 关闭弹窗时，表单数据未清空的问题
-  normalFormRef.value?.clearForm();
+  normalFormRef.value?.handleCancel();
 };
 
 // 获取分页数据方法

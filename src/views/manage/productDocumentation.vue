@@ -150,14 +150,8 @@ const pageParamsGettersSetters = {
 watch(
   pageParams,
   (newVal: any, oldVal: any) => {
-    if (
-      newVal.pageNo !== oldVal.pageNo ||
-      newVal.pageSize !== oldVal.pageSize ||
-      newVal.searchStr !== oldVal.searchStr
-    ) {
-      console.log("分页参数变化:", newVal, oldVal);
-      fetchMilvusPage();
-    }
+    console.log("分页参数变化:", newVal, oldVal);
+    fetchMilvusPage();
   },
   { deep: true }
 );
@@ -225,7 +219,7 @@ const fetchMilvusPage = () => {
         // 处理成功逻辑
         // 如果当前页大于总页数，重置为第一页 排除总页数为0的情况
         if (res?.data?.current > res?.data?.pages && res?.data?.pages !== 0) {
-          pageParams.value.pageNo = 1;
+          pageParams.value.pageNo = res?.data?.pages || 1;
           return;
         }
         milvusPageList.value = res?.data?.records || [];

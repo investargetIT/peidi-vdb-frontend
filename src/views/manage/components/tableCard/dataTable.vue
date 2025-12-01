@@ -211,7 +211,7 @@ const fetchDownloadFile = async (objectName: string) => {
     <!-- 表格 -->
     <el-table
       :data="tableData"
-      style="width: 100%; color: #09090b"
+      :style="{ width: '100%', color: '#09090b' }"
       :header-cell-style="{ color: '#09090b' }"
       max-height="740px"
       highlight-current-row
