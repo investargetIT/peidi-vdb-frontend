@@ -687,24 +687,35 @@ defineExpose({
                 v-show="hasUploadFile"
                 class="peidi-manage-data-dialog-upload-alert w-full"
               >
-                <el-alert
-                  :title="
+                <el-tooltip
+                  effect="dark"
+                  :content="
                     props.formType === 'add'
-                      ? ellipsisFileName(uploadFileList[0]?.name)
-                      : ellipsisFileName(form.documentPath)
+                      ? uploadFileList[0]?.name
+                      : form.documentPath
                   "
-                  type="info"
-                  :closable="props.formType === 'add'"
-                  style="
-                    padding-top: 3px;
-                    padding-bottom: 3px;
-                    border: 1px solid #e5e7eb;
-                  "
-                  show-icon
-                  @close="handleDeleteUploadFile"
+                  placement="top-start"
+                  :show-after="500"
                 >
-                  <template #icon> <TablerFile /> </template>
-                </el-alert>
+                  <el-alert
+                    :title="
+                      props.formType === 'add'
+                        ? ellipsisFileName(uploadFileList[0]?.name)
+                        : ellipsisFileName(form.documentPath)
+                    "
+                    type="info"
+                    :closable="props.formType === 'add'"
+                    style="
+                      padding-top: 3px;
+                      padding-bottom: 3px;
+                      border: 1px solid #e5e7eb;
+                    "
+                    show-icon
+                    @close="handleDeleteUploadFile"
+                  >
+                    <template #icon> <TablerFile /> </template>
+                  </el-alert>
+                </el-tooltip>
               </div>
 
               <div class="text-[12px] text-[#71717a]">
