@@ -243,7 +243,11 @@ const fetchDownloadFile = async (objectName: string) => {
       </el-table-column>
       <el-table-column prop="createAt" label="入库时间" width="180">
         <template #default="scope">
-          {{ dayjs(scope.row.createAt).format("YYYY-MM-DD HH:mm:ss") }}
+          {{
+            scope.row.createAt
+              ? dayjs(scope.row.createAt).format("YYYY-MM-DD HH:mm:ss")
+              : "--"
+          }}
         </template>
       </el-table-column>
       <el-table-column label="操作" width="300">

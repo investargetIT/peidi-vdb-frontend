@@ -79,7 +79,7 @@ watch(
 <template>
   <div
     v-loading="loading"
-    element-loading-text="首次加载比较慢，请稍后"
+    element-loading-text="首次加载比较慢，请稍后，若卡顿请尝试重新打开预览或刷新页面"
     class="peidi-manage-markdown"
     :style="{ height: height + 'px' }"
   >
