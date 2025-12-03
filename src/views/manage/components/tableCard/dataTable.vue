@@ -12,6 +12,7 @@ import {
   postMilvusDelete
 } from "@/api/vdb";
 import { message } from "@/utils/message";
+import dayjs from "dayjs";
 
 // props
 const props = defineProps({
@@ -240,7 +241,11 @@ const fetchDownloadFile = async (objectName: string) => {
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="reportDate" label="入库时间" width="180" />
+      <el-table-column prop="createAt" label="入库时间" width="180">
+        <template #default="scope">
+          {{ dayjs(scope.row.createAt).format("YYYY-MM-DD HH:mm:ss") }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="300">
         <template #default="scope">
           <el-tooltip content="预览" placement="top" :show-after="500">

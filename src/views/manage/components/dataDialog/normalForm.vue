@@ -17,6 +17,7 @@ import * as dd from "dingtalk-jsapi";
 import { SYSTEM_CONFIG } from "@/constants";
 import { formatToken, getToken } from "@/utils/auth";
 import { ddAuthFun } from "@/views/manage/utils/ddAuth";
+import dayjs from "dayjs";
 
 const props = defineProps({
   // 保存回调函数
@@ -51,6 +52,11 @@ const reportTypeEnum = inject<any[]>("reportTypeEnum");
 // 当前选择的表单类别
 const selectedForm = ref("t-basic");
 const formRef = ref<FormInstance>();
+
+/**
+ * 修改记录：
+ * 2025-12-03: 将入库时间字段从storageTime改为createAt
+ */
 
 /**
  * 表单字段规划 - 按类别分组
@@ -403,7 +409,9 @@ function handleSave() {
           spec: form.specification,
           batchNo: form.batchLot,
           lang: form.language,
-          docStatus: form.documentStatus === "" ? "有效" : form.documentStatus // 文档状态 空字符串默认有效
+          docStatus: form.documentStatus === "" ? "有效" : form.documentStatus, // 文档状态 空字符串默认有效
+          // createAt 入库时间 空字符串默认当前时间
+          createAt: dayjs().format("YYYY-MM-DD HH:mm:ss")
         };
         uploadRef.value.submit();
       } else if (props.formType === "edit") {
