@@ -210,9 +210,12 @@ const fetchMilvusPage = () => {
     ...handleReportType(),
     ...pageParams.value.searchStr
   ]);
+  // desc asc
+  const sortStr = JSON.stringify([{ sortName: "createAt", sortType: "desc" }]);
   getMilvusPage({
     ...pageParams.value,
-    searchStr // 会覆盖一次pageParams.value.searchStr
+    searchStr, // 会覆盖一次pageParams.value.searchStr
+    sortStr
   })
     .then((res: any) => {
       if (res?.code === 200) {

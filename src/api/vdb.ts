@@ -27,6 +27,7 @@ export const getMilvusPage = (params: {
   pageNo: number;
   pageSize: number;
   searchStr?: string; // [{"searchName":"reportType","searchType":"equals","searchValue":"检测文档"}]
+  sortStr?: string; // [{"sortName":"createAt","sortType":"desc"}]
 }) => {
   // mock模拟
   // return http.request<any>("get", "/ai/milvus/page");
@@ -34,7 +35,8 @@ export const getMilvusPage = (params: {
     params: {
       pageNo: params.pageNo,
       pageSize: params.pageSize,
-      searchStr: params.searchStr
+      searchStr: params.searchStr,
+      sortStr: params.sortStr
     }
   });
 };
