@@ -112,3 +112,9 @@ defineExpose({
     <Markdown :height="800" :data="currentMarkdown" />
   </el-dialog>
 </template>
+
+<style lang="scss" scoped>
+:deep(.vditor-reset) {
+  height: 800px !important;
+}
+</style>

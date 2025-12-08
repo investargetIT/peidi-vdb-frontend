@@ -90,5 +90,6 @@ watch(
 <style lang="scss" scoped>
 :deep(.vditor-reset) {
   max-width: 100% !important; // 这里important是为了覆盖vditor的样式
+  // height: 800px !important; // 在调用组件的地方设置高度，更灵活
 }
 </style>
