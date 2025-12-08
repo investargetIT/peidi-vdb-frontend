@@ -468,7 +468,7 @@ const handleCancel = () => {
       // 获取当前正在上传的文件
       const currentFile = uploadFileList.value[0];
       uploadRef.value.abort(currentFile); // 中断上传请求，传入文件参数
-      message("已中断上传操作", { type: "info" });
+      // message("已中断上传操作", { type: "info" });
     }
 
     // 重置上传状态
@@ -943,7 +943,9 @@ defineExpose({
       <!-- 提交按钮 -->
       <el-form-item>
         <div class="w-[100%] mt-[20px] flex justify-end">
-          <el-button size="large" @click="handleCancel">取消</el-button>
+          <el-button v-if="false" size="large" @click="handleCancel"
+            >取消</el-button
+          >
           <el-button
             size="large"
             type="primary"
