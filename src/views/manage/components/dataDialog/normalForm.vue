@@ -17,6 +17,7 @@ import * as dd from "dingtalk-jsapi";
 import { SYSTEM_CONFIG } from "@/constants";
 import { formatToken, getToken } from "@/utils/auth";
 import { ddAuthFun } from "@/views/manage/utils/ddAuth";
+import dayjs from "dayjs";
 
 const props = defineProps({
   // 保存回调函数
@@ -51,6 +52,11 @@ const reportTypeEnum = inject<any[]>("reportTypeEnum");
 // 当前选择的表单类别
 const selectedForm = ref("t-basic");
 const formRef = ref<FormInstance>();
+
+/**
+ * 修改记录：
+ * 2025-12-03: 将入库时间字段从storageTime改为createAt
+ */
 
 /**
  * 表单字段规划 - 按类别分组
@@ -225,6 +231,11 @@ watch(
       } else {
         form.documentType = "";
       }
+
+      // 如果是添加模式，并且文档标题还是空的，那默认文档标题为文件名
+      if (props.formType === "add" && !form.documentTitle) {
+        form.documentTitle = newVal[0]?.name?.split(".")?.[0] || "";
+      }
     }
   },
   { deep: true, immediate: true }
@@ -275,6 +286,7 @@ const handleUploadChange = (file: any) => {
 //#endregion
 
 // 监听formData变化，如果newVal不为空，则在newVal中遍历出form对象里存在的字段，赋值给form
+// 这个监听在add 和 edit 模式下都生效
 watch(
   () => props.formData,
   (newVal, oldVal) => {
@@ -331,6 +343,13 @@ watch(
       }
       // 调试的时候快速保存用
       // handleSave();
+    }
+
+    // add 模式下，默认文档状态为有效，批次为1
+    if (props.formType === "add") {
+      console.log("add 模式下，默认文档状态为有效，批次为1");
+      form.documentStatus = "有效";
+      form.batchLot = "1";
     }
   },
   { deep: true, immediate: true }
@@ -390,7 +409,9 @@ function handleSave() {
           spec: form.specification,
           batchNo: form.batchLot,
           lang: form.language,
-          docStatus: form.documentStatus === "" ? "有效" : form.documentStatus // 文档状态 空字符串默认有效
+          docStatus: form.documentStatus === "" ? "有效" : form.documentStatus, // 文档状态 空字符串默认有效
+          // createAt 入库时间 空字符串默认当前时间
+          createAt: dayjs().format("YYYY-MM-DD HH:mm:ss")
         };
         uploadRef.value.submit();
       } else if (props.formType === "edit") {
@@ -435,6 +456,25 @@ function handleSave() {
 }
 // 处理取消操作
 const handleCancel = () => {
+  // message("确认要取消操作吗？", { type: "warning" });
+
+  if (props.formType === "add") {
+    // 中断正在进行的上传请求
+    if (
+      uploadLoading.value &&
+      uploadRef.value &&
+      uploadFileList.value.length > 0
+    ) {
+      // 获取当前正在上传的文件
+      const currentFile = uploadFileList.value[0];
+      uploadRef.value.abort(currentFile); // 中断上传请求，传入文件参数
+      // message("已中断上传操作", { type: "info" });
+    }
+
+    // 重置上传状态
+    uploadLoading.value = false;
+  }
+
   clearForm();
   // 执行取消回调函数
   props.cancelCallback();
@@ -551,7 +591,8 @@ onMounted(() => {
 });
 
 defineExpose({
-  clearForm
+  clearForm,
+  handleCancel
 });
 </script>
 
@@ -654,24 +695,35 @@ defineExpose({
                 v-show="hasUploadFile"
                 class="peidi-manage-data-dialog-upload-alert w-full"
               >
-                <el-alert
-                  :title="
+                <el-tooltip
+                  effect="dark"
+                  :content="
                     props.formType === 'add'
-                      ? ellipsisFileName(uploadFileList[0]?.name)
-                      : ellipsisFileName(form.documentPath)
+                      ? uploadFileList[0]?.name
+                      : form.documentPath
                   "
-                  type="info"
-                  :closable="props.formType === 'add'"
-                  style="
-                    padding-top: 3px;
-                    padding-bottom: 3px;
-                    border: 1px solid #e5e7eb;
-                  "
-                  show-icon
-                  @close="handleDeleteUploadFile"
+                  placement="top-start"
+                  :show-after="500"
                 >
-                  <template #icon> <TablerFile /> </template>
-                </el-alert>
+                  <el-alert
+                    :title="
+                      props.formType === 'add'
+                        ? ellipsisFileName(uploadFileList[0]?.name)
+                        : ellipsisFileName(form.documentPath)
+                    "
+                    type="info"
+                    :closable="props.formType === 'add'"
+                    style="
+                      padding-top: 3px;
+                      padding-bottom: 3px;
+                      border: 1px solid #e5e7eb;
+                    "
+                    show-icon
+                    @close="handleDeleteUploadFile"
+                  >
+                    <template #icon> <TablerFile /> </template>
+                  </el-alert>
+                </el-tooltip>
               </div>
 
               <div class="text-[12px] text-[#71717a]">
@@ -891,7 +943,9 @@ defineExpose({
       <!-- 提交按钮 -->
       <el-form-item>
         <div class="w-[100%] mt-[20px] flex justify-end">
-          <el-button size="large" @click="handleCancel">取消</el-button>
+          <el-button v-if="false" size="large" @click="handleCancel"
+            >取消</el-button
+          >
           <el-button
             size="large"
             type="primary"

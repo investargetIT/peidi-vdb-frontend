@@ -12,6 +12,7 @@ import {
   postMilvusDelete
 } from "@/api/vdb";
 import { message } from "@/utils/message";
+import dayjs from "dayjs";
 
 // props
 const props = defineProps({
@@ -183,10 +184,10 @@ const fetchDeleteMilvus = async (data: any) => {
 const handleDownloadClick = row => {
   console.log("下载点击:", row);
   // 调用下载文件接口
-  fetchDownloadFile(row.source);
+  fetchDownloadFile(row.source, row);
 };
 // 下载文件方法
-const fetchDownloadFile = async (objectName: string) => {
+const fetchDownloadFile = async (objectName: string, row: any) => {
   try {
     const res: any = await getCommonDownloadUrl(objectName);
     console.log("下载文件成功", res);
@@ -194,7 +195,18 @@ const fetchDownloadFile = async (objectName: string) => {
     // 模拟a标签
     const link = document.createElement("a");
     link.href = res.data;
-    link.download = objectName.split("/").pop();
+
+    // 自定义文件名逻辑
+    let fileName = objectName.split("/").pop(); // 默认使用原始文件名
+
+    // if (row) {
+    //   // 如果有row对象，使用自定义文件名
+    //   const fileExtension = fileName?.split(".").pop() || ""; // 获取文件扩展名
+    //   fileName = `${row.title}.${fileExtension}`; // 自定义文件名
+    // }
+
+    // console.log("自定义文件名:", fileName);
+    link.download = fileName;
     link.click();
     // 释放内存
     URL.revokeObjectURL(link.href);
@@ -202,6 +214,33 @@ const fetchDownloadFile = async (objectName: string) => {
   } catch (error) {
     message("下载文件失败", { type: "error" });
   }
+};
+// 跨域下载文件方法
+const fetchDownloadFileCross = async (objectName: string, row: any) => {
+  const res: any = await getCommonDownloadUrl(objectName);
+  console.log("下载文件成功", res);
+
+  // 自定义文件名逻辑
+  let fileName = objectName.split("/").pop(); // 默认使用原始文件名
+
+  if (row) {
+    // 如果有row对象，使用自定义文件名
+    const fileExtension = fileName?.split(".").pop() || ""; // 获取文件扩展名
+    fileName = `${row.title}.${fileExtension}`; // 自定义文件名
+  }
+
+  // 返回的res.data是url
+  const x = new window.XMLHttpRequest();
+  x.open("GET", res.data, true);
+  x.responseType = "blob";
+  x.onload = () => {
+    const url = window.URL.createObjectURL(x.response);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+  };
+  x.send();
 };
 //#endregion
 </script>
@@ -211,7 +250,7 @@ const fetchDownloadFile = async (objectName: string) => {
     <!-- 表格 -->
     <el-table
       :data="tableData"
-      style="width: 100%; color: #09090b"
+      :style="{ width: '100%', color: '#09090b' }"
       :header-cell-style="{ color: '#09090b' }"
       max-height="740px"
       highlight-current-row
@@ -240,7 +279,15 @@ const fetchDownloadFile = async (objectName: string) => {
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="reportDate" label="入库时间" width="180" />
+      <el-table-column prop="createAt" label="入库时间" width="180">
+        <template #default="scope">
+          {{
+            scope.row.createAt
+              ? dayjs(scope.row.createAt).format("YYYY-MM-DD HH:mm:ss")
+              : "--"
+          }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="300">
         <template #default="scope">
           <el-tooltip content="预览" placement="top" :show-after="500">

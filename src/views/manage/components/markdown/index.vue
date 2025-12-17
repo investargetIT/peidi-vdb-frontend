@@ -79,7 +79,7 @@ watch(
 <template>
   <div
     v-loading="loading"
-    element-loading-text="首次加载比较慢，请稍后"
+    element-loading-text="首次加载比较慢，请稍后，若卡顿请尝试重新打开预览或刷新页面"
     class="peidi-manage-markdown"
     :style="{ height: height + 'px' }"
   >
@@ -90,5 +90,6 @@ watch(
 <style lang="scss" scoped>
 :deep(.vditor-reset) {
   max-width: 100% !important; // 这里important是为了覆盖vditor的样式
+  // height: 800px !important; // 在调用组件的地方设置高度，更灵活
 }
 </style>

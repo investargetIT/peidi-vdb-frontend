@@ -48,7 +48,7 @@ const extractMarkdownCodeBlock = (reportString: string): string => {
   const endMarker = "```";
 
   // 查找开始位置
-  const startIndex = reportString.indexOf(startMarker);
+  const startIndex = reportString.indexOf(startMarker) || 0;
   if (startIndex === -1) {
     // throw new Error("未找到markdown代码块开始标识符");
     // message("未找到markdown代码块开始标识符", { type: "warning" });
@@ -82,8 +82,15 @@ const currentMarkdown = computed(() => {
     //   index,
     //   extractMarkdownCodeBlock(fileData.markdownList[index]?.text)
     // );
-    return extractMarkdownCodeBlock(fileData.markdownList[index]?.text);
+
+    // return extractMarkdownCodeBlock(fileData.markdownList[index]?.text);
     // return fileData.markdownList[index]?.text;
+    // 合并所有markdown代码块
+    let temp = "";
+    fileData.markdownList.forEach((item: any) => {
+      temp += extractMarkdownCodeBlock(item.text);
+    });
+    return temp;
   }
   return "";
 });
@@ -105,3 +112,9 @@ defineExpose({
     <Markdown :height="800" :data="currentMarkdown" />
   </el-dialog>
 </template>
+
+<style lang="scss" scoped>
+:deep(.vditor-reset) {
+  height: 800px !important;
+}
+</style>
