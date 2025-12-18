@@ -15,6 +15,10 @@ import RiBugLine from "~icons/ri/bug-line?raw";
 import RiUserSettingsLine from "~icons/ri/user-settings-line?raw";
 import RiFolderLine from "~icons/ri/folder-line?raw";
 import EpFolderAdd from "~icons/ep/folder-add?raw";
+import FluentWindowWrench32Regular from "~icons/fluent/window-wrench-32-regular?raw";
+
+// 自定义 Icon
+import GbiIcon from "@/assets/svg/gbi.svg?raw";
 
 const icons = [
   // Element Plus Icon: https://github.com/element-plus/element-plus-icons
@@ -28,7 +32,9 @@ const icons = [
   ["ri/bug-line", RiBugLine],
   ["ri/user-settings-line", RiUserSettingsLine],
   ["ri/folder-line", RiFolderLine],
-  ["ep/folder-add", EpFolderAdd]
+  ["ep/folder-add", EpFolderAdd],
+  ["pd/gbi", GbiIcon],
+  ["fluent/window-wrench-32-regular", FluentWindowWrench32Regular]
 ];
 
 // 本地菜单图标，后端在路由的 icon 中返回对应的图标字符串并且前端在此处使用 addIcon 添加即可渲染菜单图标

@@ -78,3 +78,69 @@ export const getCommonDownloadUrl = (objectName: string) => {
 export const getMilvusDashboard = () => {
   return http.request("get", commonUrlApi("/ai/milvus/dashboard"));
 };
+
+/** 获取分页gbi表 */
+export const getGbiPage = (params: {
+  pageNo: number;
+  pageSize: number;
+  searchStr?: string;
+  sortStr?: string;
+}) => {
+  return http.request("get", commonUrlApi("/ai/gbi/table/page"), {
+    params
+  });
+};
+
+/** 新增gbi表 */
+export const postGbiNew = (data: Record<string, any>) => {
+  return http.request("post", commonUrlApi("/ai/gbi/table/new"), {
+    data
+  });
+};
+
+/** 修改gbi表 */
+export const postGbiUpdate = (data: Record<string, any>) => {
+  return http.request("post", commonUrlApi("/ai/gbi/table/update"), {
+    data
+  });
+};
+
+/** 删除gbi表 */
+export const postGbiDelete = (data: Record<string, any>) => {
+  return http.request("post", commonUrlApi("/ai/gbi/table/delete"), {
+    data
+  });
+};
+
+/** 分页业务逻辑解释 */
+export const getGbiExplainPage = (params: {
+  pageNo: number;
+  pageSize: number;
+  searchStr?: string;
+  sortStr?: string;
+}) => {
+  return http.request("get", commonUrlApi("/ai/gbi/explain/page"), {
+    params
+  });
+};
+
+/** 新增业务逻辑解释 */
+export const postGbiExplainNew = (data: Record<string, any>) => {
+  return http.request("post", commonUrlApi("/ai/gbi/explain/new"), {
+    data
+  });
+};
+
+/** 修改业务逻辑解释 */
+export const postGbiExplainUpdate = (data: Record<string, any>) => {
+  return http.request("post", commonUrlApi("/ai/gbi/explain/update"), {
+    data
+  });
+};
+
+/** 删除业务逻辑解释 */
+export const postGbiExplainDelete = (data: Record<string, any>) => {
+  return http.request("post", commonUrlApi("/ai/gbi/explain/delete"), {
+    data
+  });
+};

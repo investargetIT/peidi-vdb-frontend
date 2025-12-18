@@ -12,7 +12,7 @@ export default [
       icon: "ri/bug-line",
       title: $t("pd.menus.debug"),
       showLink: isDevEnv(),
-      rank: 101
+      rank: 1001
     },
     children: [
       {
