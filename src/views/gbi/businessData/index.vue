@@ -93,7 +93,7 @@ const handleEditClick = row => {
 
 // 保存编辑
 const handleSaveClick = row => {
-  row.isEditing = false;
+  // row.isEditing = false;
   console.log("保存数据：", row);
   // 这里可以添加保存到后端的逻辑
   // 编辑需要判断field是否改变，不改变就不传field参数
@@ -113,6 +113,7 @@ const handleSaveClick = row => {
     .then((res: any) => {
       if (res.code === 200) {
         message("修改业务逻辑解释成功", { type: "success" });
+        row.isEditing = false;
         // 清除备份数据
         row.originalData = {};
         fetchTableData();
@@ -121,6 +122,7 @@ const handleSaveClick = row => {
         // 恢复原始数据
         Object.assign(row, row.originalData);
         row.originalData = {};
+        row.isEditing = false;
       }
     })
     .catch(err => {
@@ -128,6 +130,7 @@ const handleSaveClick = row => {
       // 恢复原始数据
       Object.assign(row, row.originalData);
       row.originalData = {};
+      row.isEditing = false;
     });
 };
 
@@ -216,7 +219,7 @@ const handleDialogSaveClick = () => {
 watch(dialogFormVisible, (newVal: boolean) => {
   if (!newVal) {
     // 重置表单
-    formRef.value.resetFields();
+    formRef.value?.resetFields();
   }
 });
 //#endregion
@@ -258,14 +261,18 @@ const fetchTableData = () => {
 watch(
   pagination,
   (newVal: any, oldVal: any) => {
+    // total更新时不触发
+    if (newVal?.total === oldVal?.total) {
+      return;
+    }
     console.log("分页参数变化:", newVal, oldVal);
     fetchTableData();
   },
-  { deep: true }
+  { immediate: true, deep: true }
 );
 
 onMounted(() => {
-  fetchTableData();
+  // fetchTableData();
 });
 </script>
 
