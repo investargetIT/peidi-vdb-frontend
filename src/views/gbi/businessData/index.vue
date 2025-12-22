@@ -292,6 +292,7 @@ onMounted(() => {
         v-model="searchValue"
         style="max-width: 400px"
         placeholder="搜索业务逻辑关键词"
+        clearable
       >
         <template #append>
           <el-button :icon="Search" @click="handleSearchClick" />
@@ -428,6 +429,10 @@ onMounted(() => {
         <el-form-item label="业务逻辑解释" prop="gbiExplain">
           <el-input
             v-model="form.gbiExplain"
+            type="textarea"
+            :rows="8"
+            :maxlength="500"
+            show-word-limit
             placeholder="请输入业务逻辑解释"
             autocomplete="off"
             clearable

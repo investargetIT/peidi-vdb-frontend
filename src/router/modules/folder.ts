@@ -33,7 +33,7 @@ export default [
     component: Layout,
     meta: {
       icon: "pd/gbi",
-      title: "GBI管理",
+      title: "问数配置",
       // showLink: ,
       rank: 21
     },
