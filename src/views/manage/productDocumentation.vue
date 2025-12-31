@@ -12,6 +12,8 @@ import { message } from "@/utils/message";
 import { useRoute } from "vue-router";
 import DocumentDetailDialog from "@/views/manage/components/documentDetailDialog/index.vue";
 import dayjs from "dayjs";
+// 权限参数
+import { PERMISSION_CONFIG } from "@/constants/permission";
 
 //#region 数据概览逻辑
 const usageList = ref<any[]>([]);
@@ -298,6 +300,49 @@ const updateDocumentDetailData = row => {
 provide("updateDocumentDetailData", updateDocumentDetailData);
 //#endregion
 
+//#region 新增/编辑/删除 权限管理
+const isAddOrEditOrDeletePermission = ref<boolean>(false);
+provide("isAddOrEditOrDeletePermission", isAddOrEditOrDeletePermission);
+const checkAddOrEditOrDeletePermission = () => {
+  // 获取用户信息
+  const pdUserInfo = JSON.parse(
+    localStorage.getItem("peidi-user-info") || "{}"
+  );
+
+  function isAdmin() {
+    // 判断id方法
+    function isAdminId() {
+      if (!pdUserInfo.id) return false;
+      return PERMISSION_CONFIG.ADMIN_ID.includes(pdUserInfo.id);
+    }
+
+    // 判断管理部门方法
+    function isAdminDepartment() {
+      if (!pdUserInfo.deptIdList) return false;
+      return pdUserInfo.deptIdList.some((deptId: number) =>
+        PERMISSION_CONFIG.ADMIN_DEPARTMENT_ID.includes(deptId)
+      );
+    }
+
+    // console.log("管理员判断:", isAdminId(), isAdminDepartment());
+    return isAdminId() || isAdminDepartment();
+  }
+
+  function isDepartmentFolder(title: string) {
+    // 如果item.value不存在于DEPARTMENT_DINGTALK_DEPT_ID_MAP的key中，直接返回true
+    if (!(title in PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP))
+      return true;
+    if (!pdUserInfo.deptIdList) return false;
+    return pdUserInfo.deptIdList.includes(
+      PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[title]
+    );
+  }
+
+  isAddOrEditOrDeletePermission.value =
+    isAdmin() || isDepartmentFolder(handleTitleCardTitle().title);
+};
+//#endregion
+
 onMounted(async () => {
   await fetchReportTypeEnum();
   await fetchDocStatusEnum();
@@ -312,6 +357,8 @@ onMounted(async () => {
   //   // 或者组件内部应该有close方法
   //   documentDetailDialogRef.value?.closeDocumentDetailDialog();
   // }, 0);
+
+  checkAddOrEditOrDeletePermission();
 });
 </script>
 
