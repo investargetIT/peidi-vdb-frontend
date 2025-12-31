@@ -32,6 +32,9 @@ import { getAsyncRoutes } from "@/api/routes";
 import { getCommonEnum } from "@/api/vdb";
 import { message } from "@/utils/message";
 
+// 权限参数
+import { PERMISSION_CONFIG } from "@/constants/permission";
+
 function handRank(routeInfo: any) {
   const { name, path, parentId, meta } = routeInfo;
   return isAllEmpty(parentId)
@@ -237,8 +240,53 @@ function initRouter() {
               }
             ];
             if (res?.data?.length > 0) {
+              // 获取用户信息
+              const pdUserInfo = JSON.parse(
+                localStorage.getItem("peidi-user-info") || "{}"
+              );
+
+              function isAdmin() {
+                if (!pdUserInfo.id) return false;
+                return PERMISSION_CONFIG.ADMIN_ID.includes(pdUserInfo.id);
+              }
+              function isDepartmentFolder(item: any) {
+                // console.log(
+                //   "路由权限判断: ",
+                //   item.value in
+                //     PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP,
+                //   PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[item.value],
+                //   pdUserInfo.deptIdList,
+                //   pdUserInfo.deptIdList.includes(
+                //     PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[
+                //       item.value
+                //     ]
+                //   )
+                // );
+                // 如果item.value不存在于DEPARTMENT_DINGTALK_DEPT_ID_MAP的key中，直接返回true
+                if (
+                  !(
+                    item.value in
+                    PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP
+                  )
+                )
+                  return true;
+                if (!pdUserInfo.deptIdList) return false;
+                return pdUserInfo.deptIdList.includes(
+                  PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[item.value]
+                );
+              }
+              // 先排序，确保id最大的在最后面
+              res?.data?.sort((a: any, b: any) => a.id - b.id);
+
               // 遍历枚举值，动态添加路由
-              res?.data?.forEach(item => {
+              for (const item of res?.data) {
+                //#region 判断部门文件夹
+                // 管理员不需要判断是否加载，全加载就行
+                if (!isAdmin()) {
+                  if (!isDepartmentFolder(item)) continue;
+                }
+                //#endregion
+
                 temp[0].children.push({
                   path: `/manage/${item.id}`,
                   name: `Manage${item.id}`,
@@ -249,7 +297,7 @@ function initRouter() {
                     icon: "ri/folder-line"
                   }
                 });
-              });
+              }
             }
             handleAsyncRoutes(cloneDeep(temp));
             resolve(router);

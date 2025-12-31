@@ -643,7 +643,11 @@ defineExpose({
               </div>
             </el-form-item>
             <el-form-item label="文档类型" prop="reportType">
-              <el-select v-model="form.reportType" placeholder="选择文档类型">
+              <el-select
+                v-model="form.reportType"
+                placeholder="选择文档类型"
+                filterable
+              >
                 <el-option
                   v-for="item in reportTypeEnum"
                   :key="item.value"

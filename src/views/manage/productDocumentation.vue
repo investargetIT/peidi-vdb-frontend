@@ -84,7 +84,8 @@ const fetchReportTypeEnum = () => {
     .then((res: any) => {
       if (res?.code === 200) {
         // 处理成功逻辑
-        reportTypeEnum.value = res?.data || [];
+        reportTypeEnum.value =
+          res?.data.sort((a: any, b: any) => a.id - b.id) || [];
       } else {
         // 处理失败逻辑
         message("请求报告类型失败", { type: "error" });
@@ -150,7 +151,7 @@ const pageParamsGettersSetters = {
 watch(
   pageParams,
   (newVal: any, oldVal: any) => {
-    console.log("分页参数变化:", newVal, oldVal);
+    // console.log("分页参数变化:", newVal, oldVal);
     fetchMilvusPage();
   },
   { deep: true }

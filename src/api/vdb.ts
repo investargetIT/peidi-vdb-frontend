@@ -22,6 +22,11 @@ export const postCommonEnum = (data: any) => {
   });
 };
 
+/** 删除枚举 */
+export const deleteCommonEnumById = (id: string) => {
+  return http.request("delete", commonUrlApi(`/ai/common/enum/${id}`));
+};
+
 /** 获取分页 */
 export const getMilvusPage = (params: {
   pageNo: number;

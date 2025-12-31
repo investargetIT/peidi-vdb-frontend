@@ -36,7 +36,7 @@ watch(
       // 初始化选中第一个文件
       fileSelected.value = fileData.markdownList.length > 0 ? 0 : -1;
     }
-    console.log("fileSelected", fileSelected.value);
+    // console.log("fileSelected", fileSelected.value);
   },
   { deep: true, immediate: true }
 );

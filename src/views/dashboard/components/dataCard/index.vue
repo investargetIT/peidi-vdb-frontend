@@ -12,7 +12,7 @@ defineProps({
     default: RiDatabase2Line
   },
   value: {
-    type: String,
+    type: [String, Number], // 字符串或者数字
     default: ""
   },
   text: {
