@@ -246,22 +246,24 @@ function initRouter() {
               );
 
               function isAdmin() {
-                if (!pdUserInfo.id) return false;
-                return PERMISSION_CONFIG.ADMIN_ID.includes(pdUserInfo.id);
+                // 判断id方法
+                function isAdminId() {
+                  if (!pdUserInfo.id) return false;
+                  return PERMISSION_CONFIG.ADMIN_ID.includes(pdUserInfo.id);
+                }
+
+                // 判断管理部门方法
+                function isAdminDepartment() {
+                  if (!pdUserInfo.deptIdList) return false;
+                  return pdUserInfo.deptIdList.some((deptId: number) =>
+                    PERMISSION_CONFIG.ADMIN_DEPARTMENT_ID.includes(deptId)
+                  );
+                }
+
+                // console.log("管理员判断:", isAdminId(), isAdminDepartment());
+                return isAdminId() || isAdminDepartment();
               }
               function isDepartmentFolder(item: any) {
-                // console.log(
-                //   "路由权限判断: ",
-                //   item.value in
-                //     PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP,
-                //   PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[item.value],
-                //   pdUserInfo.deptIdList,
-                //   pdUserInfo.deptIdList.includes(
-                //     PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[
-                //       item.value
-                //     ]
-                //   )
-                // );
                 // 如果item.value不存在于DEPARTMENT_DINGTALK_DEPT_ID_MAP的key中，直接返回true
                 if (
                   !(

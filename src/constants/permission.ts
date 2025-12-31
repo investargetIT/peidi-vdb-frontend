@@ -1,8 +1,12 @@
 export const PERMISSION_CONFIG = {
   // 管理员id
   ADMIN_ID: [
-    "1926449443739600965", // 沈皓钰
-    "1887377779519434753" // 王家琦
+    // "1926449443739600965" // 沈皓钰
+    // "1887377779519434753" // 王家琦
+  ],
+  // 管理部门id
+  ADMIN_DEPARTMENT_ID: [
+    939900386 // 数字化信息部
   ],
   // 部门和对应的钉钉部门id
   DEPARTMENT_DINGTALK_DEPT_ID_MAP: {
