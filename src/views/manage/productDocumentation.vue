@@ -333,8 +333,10 @@ const checkAddOrEditOrDeletePermission = () => {
     if (!(title in PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP))
       return true;
     if (!pdUserInfo.deptIdList) return false;
-    return pdUserInfo.deptIdList.includes(
-      PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[title]
+
+    // 判断两个数组是否有交集
+    return PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[title].some(
+      (deptId: number) => pdUserInfo.deptIdList.includes(deptId)
     );
   }
 
