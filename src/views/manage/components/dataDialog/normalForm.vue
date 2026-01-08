@@ -2,6 +2,7 @@
 import { computed, inject, onMounted, reactive, ref, watch } from "vue";
 import RowCol from "@/views/manage/components/dataDialog/rowCol.vue";
 import {
+  ElNotification,
   FormInstance,
   FormRules,
   UploadFile,
@@ -11,6 +12,7 @@ import SolarUploadMinimalisticOutline from "~icons/solar/upload-minimalistic-out
 import TablerFile from "~icons/tabler/file";
 import RiUser3Line from "~icons/ri/user-3-line";
 import RiInformation2Fill from "~icons/ri/information-2-fill";
+import RiCloseLine from "~icons/ri/close-line";
 import { commonUrlApi, postMilvusUpdate } from "@/api/vdb";
 import { message } from "@/utils/message";
 import * as dd from "dingtalk-jsapi";
@@ -202,6 +204,7 @@ const uploadRef = ref<UploadInstance>(null);
 const uploadFileList = ref<UploadFile[]>([]);
 // 计算属性 判断是否显示上传按钮 true不显示 false显示
 const hasUploadFile = computed(() => {
+  // console.log("当前文件数量: ", uploadFileList.value);
   // 编辑模式下不显示上传按钮
   if (props.formType === "edit") return true;
   // 如果是添加模式，且有上传文件，不显示上传按钮
@@ -246,6 +249,13 @@ const handleUploadSuccess = (res: any) => {
   console.log("上传文档 成功回调", res);
   if (res?.code === 200) {
     message("上传文档成功", { type: "success" });
+    ElNotification({
+      title: "上传文档成功",
+      message:
+        "文档已上传完毕。后台处理中（预计20分钟），数据将分批显示。文档生成期间请勿删除。",
+      type: "success",
+      duration: 1000 * 10
+    });
     // 执行保存回调函数
     props.saveCallback(form);
     // 对接后端返回的文件路径 暂时不处理，在watch中直接赋值
@@ -710,22 +720,36 @@ defineExpose({
                   :show-after="500"
                 >
                   <el-alert
-                    :title="
-                      props.formType === 'add'
-                        ? ellipsisFileName(uploadFileList[0]?.name)
-                        : ellipsisFileName(form.documentPath)
-                    "
                     type="info"
-                    :closable="props.formType === 'add'"
+                    :closable="false"
                     style="
                       padding-top: 3px;
                       padding-bottom: 3px;
                       border: 1px solid #e5e7eb;
                     "
                     show-icon
-                    @close="handleDeleteUploadFile"
                   >
-                    <template #icon> <TablerFile /> </template>
+                    <template #icon>
+                      <TablerFile />
+                    </template>
+                    <template #default>
+                      <div class="flex justify-between items-center w-full">
+                        <div>
+                          {{
+                            props.formType === "add"
+                              ? ellipsisFileName(uploadFileList[0]?.name)
+                              : ellipsisFileName(form.documentPath)
+                          }}
+                        </div>
+                        <div
+                          v-if="props.formType === 'add'"
+                          class="cursor-pointer"
+                          @click="handleDeleteUploadFile"
+                        >
+                          <RiCloseLine />
+                        </div>
+                      </div>
+                    </template>
                   </el-alert>
                 </el-tooltip>
               </div>
@@ -983,6 +1007,15 @@ defineExpose({
 .peidi-manage-data-dialog-upload-alert {
   .el-alert--info {
     height: 32px;
+  }
+
+  :deep(.el-alert__icon) {
+    width: 16px;
+    height: 16px;
+  }
+
+  :deep(.el-alert__content) {
+    width: 100%;
   }
 
   :deep(.el-alert__close-btn) {

@@ -294,7 +294,14 @@ const documentDetailData = ref<Record<string, any>>({});
 const documentDetailDialogRef = ref<typeof DocumentDetailDialog>();
 // 文件详情数据 -更新事件
 const updateDocumentDetailData = row => {
-  documentDetailData.value = row || {};
+  // console.log("文件详情数据 -更新事件", row);
+  const newRow = JSON.parse(JSON.stringify(row));
+  // 对newRow的markdownList数组进行排序，按照markdownList.batchNo从小到大排序
+  if (newRow.markdownList) {
+    newRow.markdownList.sort((a, b) => a.batchNo - b.batchNo);
+  }
+
+  documentDetailData.value = newRow || {};
   documentDetailDialogRef.value?.showDocumentDetailDialog();
 };
 provide("updateDocumentDetailData", updateDocumentDetailData);
