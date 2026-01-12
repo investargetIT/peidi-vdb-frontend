@@ -260,9 +260,9 @@ function initRouter() {
             message("请求报告类型失败", { type: "error" });
           }
         })
-        .catch(() => {
+        .catch(error => {
           // 处理失败逻辑
-          message("请求报告类型失败", { type: "error" });
+          message("请求报告类型失败:" + error.message, { type: "error" });
         });
 
       // getAsyncRoutes().then(({ data }) => {
