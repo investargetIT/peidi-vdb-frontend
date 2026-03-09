@@ -4,6 +4,7 @@ import EpFolderAdd from "~icons/ep/folder-add";
 import { getCommonEnum, postCommonEnum, deleteCommonEnumById } from "@/api/vdb";
 import { message } from "@/utils/message";
 import { ElMessageBox } from "element-plus";
+import { isDevEnv } from "@/utils/debug";
 
 const tableData = ref<any>([
   // {
@@ -142,9 +143,9 @@ watch(dialogFormVisible, (newVal: boolean) => {
         <template #default="scope">
           <el-button
             type="danger"
-            @click="handleDelete(scope.row.id)"
             size="small"
-            :disabled="true"
+            :disabled="!isDevEnv()"
+            @click="handleDelete(scope.row.id)"
             >删除</el-button
           >
         </template>
