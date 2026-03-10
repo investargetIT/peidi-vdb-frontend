@@ -274,6 +274,18 @@ const handleUploadError = (err: any) => {
 // 上传文档 变化回调
 const handleUploadChange = (file: any) => {
   // console.log("上传文档 变化回调 file", JSON.stringify(file));
+  // 限制上传文件大小 300MB
+  const maxSize = 300 * 1024 * 1024;
+  if (file.size > maxSize) {
+    message("上传文件大小不能超过300MB", { type: "error" });
+    // 清空上传文件列表
+    uploadFileList.value = [];
+    // 清空上传请求数据
+    uploadRequest.value = {};
+    // 清空判断是否有上传文件 标志位
+    form.documentPath = "";
+    return;
+  }
   if (file.response) {
     return;
   }
@@ -392,7 +404,8 @@ function handleSave() {
   // 校验表单数据
   formRef.value?.validate(valid => {
     if (valid) {
-      // console.log("表单数据有效，执行保存操作");
+      // console.log("表单数据有效，执行保存操作", uploadRequest.value);
+      // return;
       /** ############################################################################################ **/
       // 处理上传数据uploadRequest
 
