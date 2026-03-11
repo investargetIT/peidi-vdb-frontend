@@ -26,6 +26,7 @@ const fileData = reactive({
   title: "",
   markdownList: []
 });
+const isMissing = ref(false);
 
 watch(
   () => props.documentDetailData,
@@ -35,6 +36,13 @@ watch(
       fileData.markdownList = newVal.markdownList || [];
       // 初始化选中第一个文件
       fileSelected.value = fileData.markdownList.length > 0 ? 0 : -1;
+
+      // 是否有缺失判断 判断newVal.markdownList最后一个文件的batchNo是否为数组长度
+      const isMissingTemp =
+        fileData.markdownList.length > 0 &&
+        fileData.markdownList[fileData.markdownList.length - 1].batchNo !==
+          fileData.markdownList.length;
+      isMissing.value = isMissingTemp;
     }
     // console.log("fileSelected", fileSelected.value);
   },
@@ -109,7 +117,20 @@ defineExpose({
     <div class="text-[14px] text-[#71717a] font-bold mb-[10px]">
       {{ fileData.title }}
     </div>
-    <Markdown :height="800" :data="currentMarkdown" />
+    <div v-if="currentMarkdown && isMissing" class="mb-[6px]">
+      <el-alert
+        title="检测到文件分片缺失，数据不完整，请删除源文件后重新上传。"
+        type="warning"
+        :closable="false"
+      />
+    </div>
+
+    <Markdown v-if="currentMarkdown" :height="800" :data="currentMarkdown" />
+    <div v-else>
+      <div class="text-[#0a0a0a] text-[16px]">
+        当前暂无数据，后台正在进行数据处理，请您五分钟后刷新重试。
+      </div>
+    </div>
   </el-dialog>
 </template>
 

@@ -263,6 +263,7 @@ const handleUploadSuccess = (res: any) => {
     // form.documentPath = res.data?.filePath || "";
   } else {
     message(res.msg || "上传文档失败", { type: "error" });
+    clearUploadFileStatus();
   }
 };
 // 上传文档 错误回调
@@ -278,12 +279,7 @@ const handleUploadChange = (file: any) => {
   const maxSize = 300 * 1024 * 1024;
   if (file.size > maxSize) {
     message("上传文件大小不能超过300MB", { type: "error" });
-    // 清空上传文件列表
-    uploadFileList.value = [];
-    // 清空上传请求数据
-    uploadRequest.value = {};
-    // 清空判断是否有上传文件 标志位
-    form.documentPath = "";
+    clearUploadFileStatus();
     return;
   }
   if (file.response) {
@@ -304,6 +300,16 @@ const handleUploadChange = (file: any) => {
   // uploadRef.value.submit();
   // uploadLoading.value = true;
   // console.log("上传文档 变化回调 file.raw", file.raw);
+};
+
+// 上传文件初始化方法 用于上传失败后的状态还原 el-upload失败后没法再次提交
+const clearUploadFileStatus = () => {
+  // 清空上传文件列表
+  uploadFileList.value = [];
+  // 清空上传请求数据
+  uploadRequest.value = {};
+  // 清空判断是否有上传文件 标志位
+  form.documentPath = "";
 };
 //#endregion
 
