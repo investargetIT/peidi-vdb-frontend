@@ -22,6 +22,10 @@ const props = defineProps({
   }
 });
 
+const isAddOrEditOrDeletePermission = inject<boolean>(
+  "isAddOrEditOrDeletePermission"
+);
+
 //#region 数据状态类型判断
 // [
 //   { id: 109, value: "valid", type: "docStatus" },
@@ -122,7 +126,7 @@ watch(
   () => props.tableDataSource,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
-      console.log("tableDataSource 变化:", newVal);
+      // console.log("tableDataSource 变化:", newVal);
       tableData.value = newVal;
     }
   }
@@ -308,9 +312,12 @@ const fetchDownloadFileCross = async (objectName: string, row: any) => {
               text
               size="large"
               style="width: 36px; height: 36px"
+              :disabled="!isAddOrEditOrDeletePermission"
               @click="handleEditClick(scope.row)"
             >
-              <EpEdit color="#09090b" />
+              <EpEdit
+                :color="!isAddOrEditOrDeletePermission ? '#ccc' : '#09090b'"
+              />
             </el-button>
           </el-tooltip>
           <el-tooltip content="下载" placement="top" :show-after="500">
@@ -328,9 +335,12 @@ const fetchDownloadFileCross = async (objectName: string, row: any) => {
               text
               size="large"
               style="width: 36px; height: 36px"
+              :disabled="!isAddOrEditOrDeletePermission"
               @click="handleDeleteClick(scope.row)"
             >
-              <EpDelete color="#09090b" />
+              <EpDelete
+                :color="!isAddOrEditOrDeletePermission ? '#ccc' : '#09090b'"
+              />
             </el-button>
           </el-tooltip>
         </template>

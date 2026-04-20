@@ -237,8 +237,10 @@ function initRouter() {
               }
             ];
             if (res?.data?.length > 0) {
+              // 先排序，确保id最大的在最后面
+              res?.data?.sort((a: any, b: any) => a.id - b.id);
               // 遍历枚举值，动态添加路由
-              res?.data?.forEach(item => {
+              for (const item of res?.data) {
                 temp[0].children.push({
                   path: `/manage/${item.id}`,
                   name: `Manage${item.id}`,
@@ -249,7 +251,7 @@ function initRouter() {
                     icon: "ri/folder-line"
                   }
                 });
-              });
+              }
             }
             handleAsyncRoutes(cloneDeep(temp));
             resolve(router);
@@ -258,9 +260,9 @@ function initRouter() {
             message("请求报告类型失败", { type: "error" });
           }
         })
-        .catch(() => {
+        .catch(error => {
           // 处理失败逻辑
-          message("请求报告类型失败", { type: "error" });
+          message("请求报告类型失败:" + error.message, { type: "error" });
         });
 
       // getAsyncRoutes().then(({ data }) => {

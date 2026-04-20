@@ -77,6 +77,28 @@ export const getJsApi = params => {
   });
 };
 
+/** 判断用户是否登陆 */
+export const checkLoginApi = (params: { token: string }) => {
+  return http.request<RefreshTokenResult>(
+    "get",
+    commonUrlApi("/user/user-check"),
+    {
+      params
+    }
+  );
+};
+
+/** 根据用户钉钉id获取上级部门列表 */
+export const getDingParentByUserApi = (params: { userId: string }) => {
+  return http.request<RefreshTokenResult>(
+    "get",
+    commonUrlApi("/ding/parentbyuser"),
+    {
+      params
+    }
+  );
+};
+
 /** 刷新`token` */
 export const refreshTokenApi = (data?: object) => {
   return http.request<RefreshTokenResult>("post", "/refresh-token", { data });

@@ -12,6 +12,8 @@ import { message } from "@/utils/message";
 import { useRoute } from "vue-router";
 import DocumentDetailDialog from "@/views/manage/components/documentDetailDialog/index.vue";
 import dayjs from "dayjs";
+// 权限参数
+import { PERMISSION_CONFIG } from "@/constants/permission";
 
 //#region 数据概览逻辑
 const usageList = ref<any[]>([]);
@@ -84,7 +86,8 @@ const fetchReportTypeEnum = () => {
     .then((res: any) => {
       if (res?.code === 200) {
         // 处理成功逻辑
-        reportTypeEnum.value = res?.data || [];
+        reportTypeEnum.value =
+          res?.data.sort((a: any, b: any) => a.id - b.id) || [];
       } else {
         // 处理失败逻辑
         message("请求报告类型失败", { type: "error" });
@@ -150,7 +153,7 @@ const pageParamsGettersSetters = {
 watch(
   pageParams,
   (newVal: any, oldVal: any) => {
-    console.log("分页参数变化:", newVal, oldVal);
+    // console.log("分页参数变化:", newVal, oldVal);
     fetchMilvusPage();
   },
   { deep: true }
@@ -291,10 +294,62 @@ const documentDetailData = ref<Record<string, any>>({});
 const documentDetailDialogRef = ref<typeof DocumentDetailDialog>();
 // 文件详情数据 -更新事件
 const updateDocumentDetailData = row => {
-  documentDetailData.value = row || {};
+  // console.log("文件详情数据 -更新事件", row);
+  const newRow = JSON.parse(JSON.stringify(row));
+  // 对newRow的markdownList数组进行排序，按照markdownList.batchNo从小到大排序
+  if (newRow.markdownList) {
+    newRow.markdownList.sort((a, b) => a.batchNo - b.batchNo);
+  }
+
+  documentDetailData.value = newRow || {};
   documentDetailDialogRef.value?.showDocumentDetailDialog();
 };
 provide("updateDocumentDetailData", updateDocumentDetailData);
+//#endregion
+
+//#region 新增/编辑/删除 权限管理
+const isAddOrEditOrDeletePermission = ref<boolean>(false);
+provide("isAddOrEditOrDeletePermission", isAddOrEditOrDeletePermission);
+const checkAddOrEditOrDeletePermission = () => {
+  // 获取用户信息
+  const pdUserInfo = JSON.parse(
+    localStorage.getItem("peidi-user-info") || "{}"
+  );
+
+  function isAdmin() {
+    // 判断id方法
+    function isAdminId() {
+      if (!pdUserInfo.id) return false;
+      return PERMISSION_CONFIG.ADMIN_ID.includes(pdUserInfo.id);
+    }
+
+    // 判断管理部门方法
+    function isAdminDepartment() {
+      if (!pdUserInfo.deptIdList) return false;
+      return pdUserInfo.deptIdList.some((deptId: number) =>
+        PERMISSION_CONFIG.ADMIN_DEPARTMENT_ID.includes(deptId)
+      );
+    }
+
+    // console.log("管理员判断:", isAdminId(), isAdminDepartment());
+    return isAdminId() || isAdminDepartment();
+  }
+
+  function isDepartmentFolder(title: string) {
+    // 如果item.value不存在于DEPARTMENT_DINGTALK_DEPT_ID_MAP的key中，直接返回true
+    if (!(title in PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP))
+      return true;
+    if (!pdUserInfo.deptIdList) return false;
+
+    // 判断两个数组是否有交集
+    return PERMISSION_CONFIG.DEPARTMENT_DINGTALK_DEPT_ID_MAP[title].some(
+      (deptId: number) => pdUserInfo.deptIdList.includes(deptId)
+    );
+  }
+
+  isAddOrEditOrDeletePermission.value =
+    isAdmin() || isDepartmentFolder(handleTitleCardTitle().title);
+};
 //#endregion
 
 onMounted(async () => {
@@ -311,6 +366,8 @@ onMounted(async () => {
   //   // 或者组件内部应该有close方法
   //   documentDetailDialogRef.value?.closeDocumentDetailDialog();
   // }, 0);
+
+  checkAddOrEditOrDeletePermission();
 });
 </script>
 

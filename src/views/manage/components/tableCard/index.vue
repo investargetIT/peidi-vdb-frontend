@@ -24,6 +24,10 @@ const props = defineProps({
 });
 
 const pageParamsGettersSetters = inject<any>("pageParamsGettersSetters");
+// 新增/编辑/删除 权限管理
+const isAddOrEditOrDeletePermission = inject<boolean>(
+  "isAddOrEditOrDeletePermission"
+);
 
 const dataBlocks = computed(() => {
   return [
@@ -165,6 +169,7 @@ const handleAddDataClick = () => {
             <el-button
               type="primary"
               :icon="RiAddLargeLine"
+              :disabled="!isAddOrEditOrDeletePermission"
               @click="handleAddDataClick"
               >添加数据</el-button
             >

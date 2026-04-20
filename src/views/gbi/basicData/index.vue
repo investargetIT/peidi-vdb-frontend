@@ -188,7 +188,7 @@ watch(dialogFormVisible, (newVal: boolean) => {
   if (!newVal) {
     // 重置表单
     // console.log("重置表单");
-    formRef.value.resetFields();
+    formRef.value?.resetFields();
   }
 });
 //#endregion

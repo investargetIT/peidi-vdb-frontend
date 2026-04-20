@@ -10,7 +10,13 @@ import { decryptMessage, encryptMessage } from "./utils/cryptojs";
 import { storageLocal } from "@pureadmin/utils";
 import * as dd from "dingtalk-jsapi";
 import { SYSTEM_CONFIG } from "@/constants";
-import { getUserInfo, register, registerMobile } from "@/api/user";
+import {
+  getDingParentByUserApi,
+  checkLoginApi,
+  getUserInfo,
+  register,
+  registerMobile
+} from "@/api/user";
 
 const router = useRouter();
 const { t } = useI18n();
@@ -22,15 +28,80 @@ const fetchLogin = (username: string, password: string) => {
       username: username,
       password: password
     })
-    .then(res => {
+    .then((res: any) => {
       if (res.success) {
-        console.log(res?.data);
-        // 获取后端路由
-        return initRouter().then(() => {
-          router.push(getTopMenu(true).path).then(() => {
-            message(t("login.pureLoginSuccess"), { type: "success" });
+        // console.log(res?.data); // 用户token
+        //TODO: 这段逻辑可以所有项目使用
+        if (res?.data) {
+          checkLoginApi({ token: res.data }).then((resUserInfo: any) => {
+            // 用户信息
+            let userInfo = {};
+            // 部门列表
+            let deptIds = [];
+            // console.log("获取到的用户信息：", resUserInfo?.data);
+            userInfo = resUserInfo.data;
+
+            if (resUserInfo.success && resUserInfo?.data?.dingId) {
+              getDingParentByUserApi({
+                userId: resUserInfo.data.dingId
+              })
+                .then((resDingParent: any) => {
+                  // console.log("获取到的上级部门列表：", resDingParent?.data);
+
+                  if (
+                    resDingParent?.data?.parent_list &&
+                    resDingParent.data.parent_list.length > 0
+                  ) {
+                    // 铺平部门列表
+                    const flatParentIds = flatten(
+                      resDingParent.data.parent_list.map(
+                        (item: any) => item.parent_dept_id_list
+                      )
+                    );
+                    // 去重
+                    const uniqueParentIds = Array.from(new Set(flatParentIds));
+                    deptIds = uniqueParentIds;
+                  }
+                  function flatten(arr: any[]) {
+                    return arr.reduce((acc, val) => {
+                      return acc.concat(
+                        Array.isArray(val) ? flatten(val) : val
+                      );
+                    }, []);
+                  }
+                })
+                .finally(() => {
+                  localStorage.setItem(
+                    "peidi-user-info",
+                    JSON.stringify({ ...userInfo, deptIdList: deptIds })
+                  );
+                  handleInitRouter();
+                });
+            } else {
+              // 没有钉钉id 直接保存用户信息
+              localStorage.setItem(
+                "peidi-user-info",
+                JSON.stringify({ ...userInfo, deptIdList: deptIds })
+              );
+              handleInitRouter();
+            }
           });
-        });
+        }
+
+        // 初始化路由
+        function handleInitRouter() {
+          return initRouter().then(() => {
+            router.push(getTopMenu(true).path).then(() => {
+              message(t("login.pureLoginSuccess"), { type: "success" });
+            });
+          });
+        }
+        // // 获取后端路由
+        // return initRouter().then(() => {
+        //   router.push(getTopMenu(true).path).then(() => {
+        //     message(t("login.pureLoginSuccess"), { type: "success" });
+        //   });
+        // });
       } else {
         message(t("login.pureLoginFail"), { type: "error" });
         // 不是钉钉环境，退回登录页
@@ -50,9 +121,9 @@ const getLoginInfoInWeb = () => {
   const key1 = key1Match ? key1Match[1] : null;
   const key2 = key2Match ? key2Match[1] : null;
   const key3 = key3Match ? key3Match[1] : null;
-  console.log("key1", key1);
-  console.log("key2", key2);
-  console.log("key3", key3);
+  // console.log("key1", key1);
+  // console.log("key2", key2);
+  // console.log("key3", key3);
   return { key1, key2, key3 };
 };
 
@@ -67,7 +138,7 @@ const loginInWeb = () => {
   // 判断是否需要记住密码
   if (queryKey.key3) {
     const isRemember = decryptMessage(queryKey.key3);
-    console.log("isRemember", isRemember);
+    // console.log("isRemember", isRemember);
     if (isRemember === "true") {
       storageLocal().setItem("peidi-userInfo", {
         username: decryptMessage(queryKey.key1 || ""),

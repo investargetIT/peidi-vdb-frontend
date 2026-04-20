@@ -18,7 +18,7 @@ import { emitter } from "@/utils/mitt";
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
   // 请求超时时间
-  timeout: 10000,
+  timeout: 1000 * 60,
   headers: {
     Accept: "application/json, text/plain, */*",
     "Content-Type": "application/json",
@@ -131,7 +131,8 @@ class PureHttp {
         if (response?.data?.code === 100100012) {
           emitter.emit("logout");
           // alert("登录过期，请重新登录");
-          return response.data;
+          // return response.data;
+          return Promise.reject(new Error("登录过期，请重新登录"));
         }
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof $config.beforeResponseCallback === "function") {

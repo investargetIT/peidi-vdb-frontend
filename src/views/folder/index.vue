@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from "vue";
 import EpFolderAdd from "~icons/ep/folder-add";
-import { getCommonEnum, postCommonEnum } from "@/api/vdb";
+import { getCommonEnum, postCommonEnum, deleteCommonEnumById } from "@/api/vdb";
 import { message } from "@/utils/message";
+import { ElMessageBox } from "element-plus";
+import { isDevEnv } from "@/utils/debug";
 
 const tableData = ref<any>([
   // {
@@ -12,13 +14,39 @@ const tableData = ref<any>([
   // }
 ]);
 
+// 删除报告类型
+const handleDelete = (id: string) => {
+  ElMessageBox.confirm(`确定删除报告类型${id}吗？`, "删除确认", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning"
+  }).then(() => {
+    deleteCommonEnumById(id)
+      .then((res: any) => {
+        if (res?.code === 200) {
+          // 处理成功逻辑
+          message("删除成功", { type: "success" });
+          // 刷新页面
+          window.location.reload();
+        } else {
+          // 处理失败逻辑
+          message("删除失败:" + res?.msg, { type: "error" });
+        }
+      })
+      .catch(error => {
+        // 处理失败逻辑
+        message("删除失败:" + error?.message, { type: "error" });
+      });
+  });
+};
+
 // 请求报告类型
 const fetchReportTypeEnum = () => {
   getCommonEnum("reportType")
     .then((res: any) => {
       if (res?.code === 200) {
         // 处理成功逻辑
-        tableData.value = res?.data || [];
+        tableData.value = res?.data.sort((a: any, b: any) => b.id - a.id) || [];
       } else {
         // 处理失败逻辑
         message("请求报告类型失败", { type: "error" });
@@ -111,6 +139,17 @@ watch(dialogFormVisible, (newVal: boolean) => {
     >
       <el-table-column prop="id" label="ID" width="180" />
       <el-table-column prop="value" label="名称" />
+      <el-table-column label="操作">
+        <template #default="scope">
+          <el-button
+            type="danger"
+            size="small"
+            :disabled="!isDevEnv()"
+            @click="handleDelete(scope.row.id)"
+            >删除</el-button
+          >
+        </template>
+      </el-table-column>
       <!-- <el-table-column prop="type" label="Type" /> -->
     </el-table>
     <!-- 文档类型管理弹窗 -->
