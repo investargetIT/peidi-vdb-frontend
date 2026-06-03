@@ -37,11 +37,11 @@ watch(
       // 初始化选中第一个文件
       fileSelected.value = fileData.markdownList.length > 0 ? 0 : -1;
 
-      // 是否有缺失判断 判断newVal.markdownList最后一个文件的batchNo是否为数组长度
+      // 是否有缺失判断 判断newVal.markdownList最后一个文件的batchNo是否为数组长度 - 1
       const isMissingTemp =
         fileData.markdownList.length > 0 &&
         fileData.markdownList[fileData.markdownList.length - 1].batchNo !==
-          fileData.markdownList.length;
+          fileData.markdownList.length - 1;
       isMissing.value = isMissingTemp;
     }
     // console.log("fileSelected", fileSelected.value);

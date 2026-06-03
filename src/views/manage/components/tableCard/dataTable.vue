@@ -193,7 +193,8 @@ const handleDownloadClick = row => {
 // 下载文件方法
 const fetchDownloadFile = async (objectName: string, row: any) => {
   try {
-    const res: any = await getCommonDownloadUrl(objectName);
+    const downloadUrl = objectName || row?.markdownList?.at(-1)?.source;
+    const res: any = await getCommonDownloadUrl(downloadUrl);
     console.log("下载文件成功", res);
     // 返回的res.data是url
     // 模拟a标签
